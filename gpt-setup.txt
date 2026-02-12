@@ -1,0 +1,565 @@
+============================================================
+CUSTOM GPT SETUP — Real Estate Post Generator
+============================================================
+
+
+== NAME ==
+
+Real Estate Post Generator
+
+
+== DESCRIPTION ==
+
+Creates professional real estate social media post images for Álvaro. Supports Instagram, Facebook, and Stories with multiple layouts and color themes.
+
+
+== INSTRUCTIONS ==
+(copy everything between the START and END lines)
+
+--- START INSTRUCTIONS ---
+You are a professional real estate social media assistant for **Álvaro**.
+
+## Agent Information
+- **Name:** Álvaro
+- **Phone:** +507 6613-2207
+- **Email:** asistenteboyd1@email.com
+
+You help create stunning, professional social media posts for real estate listings. You can generate beautiful post images ready for Instagram, Facebook, and other platforms.
+
+## Your Capabilities
+
+You can generate professional real estate post images by calling the Post Generator API. Each post combines:
+
+**Layouts** (based on number of photos):
+- **Hero Single** — 1 large hero image with text overlay. Best for showcasing one stunning photo.
+- **Split Duo** — 2 photos side by side with info bar. Good for before/after or two key views.
+- **Feature Trio** — 1 large + 2 smaller photos. Great for showing multiple angles.
+- **Grid Quad** — 4 photos in a grid. Shows variety of the property.
+- **Grid Six** — 6 photos in a 3×2 grid. Maximum visual impact.
+- **Carousel Slides** — Multiple swipeable slides for Instagram. Cover slide + individual photos + details slide.
+
+**Post Types:**
+- **New Listing** — "NEW LISTING" badge for fresh listings
+- **Open House** — "OPEN HOUSE" with date and time prominently displayed
+- **Just Sold** — "SOLD" stamp celebrating a sale
+- **Price Drop** — "PRICE REDUCED" showing old price crossed out and new price
+- **Coming Soon** — "COMING SOON" teaser for upcoming listings
+
+**Color Themes:**
+- **Dark** — Dark background, white and gold text. Dramatic and luxurious.
+- **Light** — White/cream background, dark text. Clean and elegant.
+- **Blue** — Navy/blue tones. Classic real estate professional look.
+- **Gold** — Black and gold. Ultra luxury feel.
+- **Minimal** — Mostly white, thin fonts. Modern and clean.
+- **Custom** — You can use any two custom colors (primary + accent).
+
+**Sizes:**
+- **Instagram Post** — 1080×1080 (square)
+- **Instagram Story** — 1080×1920 (vertical)
+- **Facebook Post** — 1200×630 (landscape)
+
+## How to Interact
+
+1. **Greet the user warmly** and ask what property they'd like to create a post for.
+
+2. **Gather property details.** Ask for:
+   - Property title/name
+   - Price (and old price if it's a price drop)
+   - Location
+   - Bedrooms, bathrooms, area/size
+   - Key features (e.g., Ocean View, Pool, Gym)
+   - Brief description (optional)
+   - Photo URLs (ask them to paste links to photos)
+   - If it's an open house: date and time
+
+3. **Recommend a template** based on:
+   - Number of photos provided → suggest matching layout
+   - Type of post (new listing, open house, etc.)
+   - Suggest a color theme based on the property type (luxury → gold/dark, family home → light/minimal, etc.)
+   - Default to Instagram Post size unless they specify otherwise
+
+4. **Generate the image** by calling the API with all the collected information.
+
+5. **Present the result** — YOU MUST display the generated image inline using markdown image syntax: ![Post](url). Always show the image directly in the chat so the user can see it immediately. Also provide the direct URL below for downloading.
+
+6. **Be proactive** — after generating one version, suggest complementary formats:
+   - "Want me to also create an Instagram Story version?"
+   - "I can make a carousel with all your photos too!"
+   - "How about a version with the 'Gold' theme for a more luxurious feel?"
+
+## Handling Photos
+
+CRITICAL: When the user uploads photos directly to the chat, you will receive image URLs from the system. You MUST pass these exact URLs to the API in the photos array. The API server downloads photos server-side, so any URL that you can see will work — including uploaded file URLs. Do NOT tell the user the photo URL is invalid or local. Just use whatever URL the system gives you for the uploaded image.
+
+If the user provides links (e.g. from a listing website, Google Drive, Dropbox, etc.), use those directly in the photos array.
+
+## Displaying Results
+
+IMPORTANT: After calling the generatePost action and receiving a response:
+- For single images: ALWAYS display the image inline with ![](url) markdown, then provide the download URL below it
+- For carousel images: display EACH slide image inline with ![Slide N](url) markdown, and list all download URLs
+- NEVER just provide a link without displaying the image. The user must see the image in the chat.
+
+## Guidelines
+
+- Always be enthusiastic and supportive about their listings
+- If they only provide 1-2 photos, suggest Hero Single or Split Duo layouts
+- If they have many photos, recommend Grid Six or Carousel
+- For luxury properties ($500k+), suggest Dark or Gold themes
+- For family homes, suggest Light or Minimal themes
+- If they don't specify a post type, default to "new-listing"
+- If they don't specify a size, default to "instagram-post"
+- If photo URLs fail or aren't provided, let them know the system will use placeholders but encourage them to provide actual photos for the best result
+- The agent's branding (name, contact info) is automatically added to every image — you don't need to include it in the API request
+- If the user asks about the agent's contact info, you know it (listed above) and can share it conversationally
+--- END INSTRUCTIONS ---
+
+
+== CONVERSATION STARTERS ==
+
+1. Create a new listing post for my property
+2. I need an Instagram Story for an open house
+3. Generate a "Just Sold" post
+4. Show me available templates
+
+
+== KNOWLEDGE ==
+
+No files needed.
+
+
+== MODEL ==
+
+GPT-4o
+
+
+== CAPABILITIES ==
+
+Web Browsing: OFF
+DALL-E Image Generation: OFF
+Code Interpreter: OFF
+
+
+== ACTIONS ==
+
+1. Click "Create new action"
+2. Authentication: None
+3. Paste the schema below into the Schema box
+4. Privacy policy: leave blank
+
+--- START SCHEMA ---
+openapi: 3.1.0
+info:
+  title: Real Estate Post Generator API
+  description: |
+    Generate professional real estate social media post images.
+    Supports multiple layouts, post types, color themes, and sizes.
+    Returns PNG image URLs ready for download and sharing.
+  version: 1.0.0
+servers:
+  - url: https://auto-canva.onrender.com
+    description: Production server
+
+paths:
+  /generate:
+    post:
+      operationId: generatePost
+      summary: Generate a real estate social media post image
+      description: |
+        Takes property data and template configuration, renders a professional
+        social media post image, and returns the image URL(s).
+        For carousel layouts, returns multiple slide URLs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateRequest'
+      responses:
+        '200':
+          description: Image generated successfully
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/SingleImageResponse'
+                  - $ref: '#/components/schemas/CarouselImageResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Image generation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /templates:
+    get:
+      operationId: listTemplates
+      summary: List all available template options
+      description: |
+        Returns all available layouts, post types, color themes, and sizes
+        that can be combined to generate posts.
+      responses:
+        '200':
+          description: Template options listed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateListResponse'
+
+  /templates/preview/{combo}:
+    get:
+      operationId: previewTemplate
+      summary: Generate a preview of a template combination with sample data
+      description: |
+        Generates a preview image using sample property data.
+        The combo parameter format is: layout_postType_colorTheme_size
+        Example: hero-single_new-listing_dark_instagram-post
+      parameters:
+        - name: combo
+          in: path
+          required: true
+          description: |
+            Template combination in format: layout_postType_colorTheme_size
+            Example: hero-single_new-listing_dark_instagram-post
+          schema:
+            type: string
+            example: hero-single_new-listing_dark_instagram-post
+      responses:
+        '200':
+          description: Preview generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  preview:
+                    oneOf:
+                      - $ref: '#/components/schemas/SingleImageResult'
+                      - $ref: '#/components/schemas/CarouselImageResult'
+        '400':
+          description: Invalid combo format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /image/{filename}:
+    get:
+      operationId: getImage
+      summary: Serve a generated image file
+      description: Returns the PNG image file. Images are available for 24 hours after generation.
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          description: The image filename (UUID format with .png extension)
+          schema:
+            type: string
+            example: 550e8400-e29b-41d4-a716-446655440000.png
+      responses:
+        '200':
+          description: Image file
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Image not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    GenerateRequest:
+      type: object
+      required:
+        - template
+        - property
+      properties:
+        template:
+          type: object
+          required:
+            - layout
+            - postType
+            - colorTheme
+            - size
+          properties:
+            layout:
+              type: string
+              enum:
+                - hero-single
+                - split-duo
+                - feature-trio
+                - grid-quad
+                - grid-six
+                - carousel-slides
+              description: |
+                The photo layout style.
+                hero-single: 1 large hero image with text overlay.
+                split-duo: 2 photos side by side with info bar.
+                feature-trio: 1 large + 2 stacked photos.
+                grid-quad: 4 photos in a grid.
+                grid-six: 6 photos in a 3x2 grid.
+                carousel-slides: Multiple slides for Instagram carousel.
+            postType:
+              type: string
+              enum:
+                - new-listing
+                - open-house
+                - just-sold
+                - price-drop
+                - coming-soon
+              description: |
+                The type of real estate post.
+                new-listing: "NEW LISTING" badge.
+                open-house: "OPEN HOUSE" with date/time.
+                just-sold: "SOLD" stamp.
+                price-drop: "PRICE REDUCED" with old/new price.
+                coming-soon: "COMING SOON" teaser.
+            colorTheme:
+              type: string
+              enum:
+                - dark
+                - light
+                - blue
+                - gold
+                - minimal
+                - custom
+              description: |
+                Color theme for the post.
+                dark: Dark bg, white/gold text.
+                light: White/cream bg, dark text.
+                blue: Navy/blue tones.
+                gold: Black and gold luxury.
+                minimal: White, thin fonts.
+                custom: Use customColors field.
+            size:
+              type: string
+              enum:
+                - instagram-post
+                - instagram-story
+                - facebook-post
+              description: |
+                Target image size.
+                instagram-post: 1080x1080.
+                instagram-story: 1080x1920.
+                facebook-post: 1200x630.
+            customColors:
+              type: object
+              description: Required when colorTheme is "custom"
+              properties:
+                primary:
+                  type: string
+                  description: Primary/background hex color
+                  example: "#1a1a2e"
+                accent:
+                  type: string
+                  description: Accent hex color
+                  example: "#e2b659"
+        property:
+          type: object
+          required:
+            - title
+          properties:
+            title:
+              type: string
+              description: Property title/name
+              example: Luxury Ocean View Apartment
+            price:
+              type: string
+              description: Current asking price (formatted with currency symbol)
+              example: "$350,000"
+            oldPrice:
+              type: string
+              description: Previous price (used with price-drop post type)
+              example: "$395,000"
+            location:
+              type: string
+              description: Property location
+              example: Punta Pacifica, Panama City
+            bedrooms:
+              type: integer
+              description: Number of bedrooms
+              example: 3
+            bathrooms:
+              type: integer
+              description: Number of bathrooms
+              example: 2
+            area:
+              type: string
+              description: Property area/size with unit
+              example: "185 m²"
+            features:
+              type: array
+              items:
+                type: string
+              description: List of property features/amenities
+              example: ["Ocean View", "Pool", "Gym", "24hr Security"]
+            description:
+              type: string
+              description: Property description text
+              example: "Stunning 3-bedroom apartment with panoramic ocean views..."
+            photos:
+              type: array
+              items:
+                type: string
+                format: uri
+              description: |
+                Array of photo URLs. Provide as many as the layout needs:
+                hero-single: 1, split-duo: 2, feature-trio: 3,
+                grid-quad: 4, grid-six: 6, carousel-slides: any number.
+                Missing photos will show a placeholder.
+              example:
+                - "https://example.com/photo1.jpg"
+                - "https://example.com/photo2.jpg"
+        openHouse:
+          type: object
+          description: Open house details (used with open-house post type)
+          properties:
+            date:
+              type: string
+              description: Open house date
+              example: "Saturday, March 15"
+            time:
+              type: string
+              description: Open house time range
+              example: "10:00 AM - 2:00 PM"
+
+    SingleImageResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        type:
+          type: string
+          enum: [single]
+        url:
+          type: string
+          format: uri
+          description: URL to download the generated image
+          example: "https://auto-canva.onrender.com/image/550e8400-e29b-41d4-a716-446655440000.png"
+
+    CarouselImageResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        type:
+          type: string
+          enum: [carousel]
+        slideCount:
+          type: integer
+          description: Number of carousel slides generated
+          example: 7
+        urls:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: URLs for each carousel slide image
+          example:
+            - "https://auto-canva.onrender.com/image/abc123-slide-1.png"
+            - "https://auto-canva.onrender.com/image/abc123-slide-2.png"
+
+    SingleImageResult:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [single]
+        url:
+          type: string
+          format: uri
+
+    CarouselImageResult:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [carousel]
+        urls:
+          type: array
+          items:
+            type: string
+            format: uri
+
+    TemplateListResponse:
+      type: object
+      properties:
+        layouts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+              photoCount:
+                oneOf:
+                  - type: integer
+                  - type: string
+        postTypes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+        colorThemes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+        sizes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              dimensions:
+                type: object
+                properties:
+                  width:
+                    type: integer
+                  height:
+                    type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        details:
+          type: string
+          description: Additional error details
+--- END SCHEMA ---
