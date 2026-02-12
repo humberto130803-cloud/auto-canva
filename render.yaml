@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: auto-canva
+    runtime: docker
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: BASE_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: IMAGE_TTL_HOURS
+        value: 24
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: true
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium

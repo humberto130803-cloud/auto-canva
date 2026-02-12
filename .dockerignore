@@ -1,0 +1,7 @@
+node_modules
+public/images/generated/*
+!public/images/generated/.gitkeep
+.env
+test-*.js
+*.md
+.git
