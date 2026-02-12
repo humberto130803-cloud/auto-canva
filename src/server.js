@@ -24,6 +24,11 @@ app.use('/generate', generateRoute);
 app.use('/templates', templatesRoute);
 app.use('/image', imageRoute);
 
+// Privacy policy
+app.get('/privacy', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'privacy-policy.html'));
+});
+
 // Health check
 app.get('/', (req, res) => {
   res.json({
