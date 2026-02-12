@@ -7,10 +7,8 @@ info:
     Returns PNG image URLs ready for download and sharing.
   version: 1.0.0
 servers:
-  - url: https://your-app-name.onrender.com
-    description: Production server (update with your actual deployment URL)
-  - url: http://localhost:3000
-    description: Local development server
+  - url: https://auto-canva.onrender.com
+    description: Production server
 
 paths:
   /generate:
