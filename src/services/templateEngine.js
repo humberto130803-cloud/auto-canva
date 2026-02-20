@@ -192,7 +192,7 @@ function svgIcon(name, color, sizePx) {
 
 function buildPhotoSlots(photos, count) {
   const placeholder = 'data:image/svg+xml,' + encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" fill="%23cccccc"><rect width="800" height="600" fill="%23e0e0e0"/><text x="400" y="300" text-anchor="middle" font-family="Arial" font-size="32" fill="%23999">No Photo</text></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="%23404040"/><rect x="340" y="230" width="120" height="100" rx="8" fill="none" stroke="%23666" stroke-width="4"/><circle cx="380" cy="270" r="12" fill="%23666"/><path d="M350 310 L380 280 L410 300 L430 285 L450 310" fill="none" stroke="%23666" stroke-width="3"/><text x="400" y="360" text-anchor="middle" font-family="Arial" font-size="18" fill="%23777">Photo</text></svg>'
   );
   const result = [];
   for (let i = 0; i < count; i++) {
@@ -224,7 +224,7 @@ function buildBadge(postType, colors, property, openHouse, labels) {
     </div>`;
   }
   if (postType === 'open-house' && openHouse) {
-    extra = `<div style="font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px;color:${colors.text};">
+    extra = `<div style="font-family:'Montserrat',sans-serif;font-size:15px;margin-top:4px;color:${colors.text};">
       ${openHouse.date ? escapeHtml(openHouse.date) : ''}${openHouse.date && openHouse.time ? ' · ' : ''}${openHouse.time ? escapeHtml(openHouse.time) : ''}
     </div>`;
   }
@@ -237,7 +237,7 @@ function buildBadge(postType, colors, property, openHouse, labels) {
   }
 
   return `<div style="position:absolute;top:20px;left:20px;z-index:10;">
-    <div style="background:${colors.badge};color:${colors.badgeText};font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:8px 20px;letter-spacing:2.5px;box-shadow:0 2px 10px rgba(0,0,0,0.2);">${escapeHtml(label)}</div>
+    <div style="background:${colors.badge};color:${colors.badgeText};font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;padding:10px 24px;letter-spacing:2.5px;box-shadow:0 2px 10px rgba(0,0,0,0.2);">${escapeHtml(label)}</div>
     ${extra}
   </div>`;
 }
@@ -245,22 +245,23 @@ function buildBadge(postType, colors, property, openHouse, labels) {
 function buildInlineBadge(postType, colors, labels) {
   const label = getPostTypeBadge(postType, labels);
   if (!label) return '';
-  return `<span style="display:inline-block;background:${colors.badge};color:${colors.badgeText};font-family:'Montserrat',sans-serif;font-weight:700;font-size:11px;padding:5px 14px;letter-spacing:2px;margin-right:12px;vertical-align:middle;">${escapeHtml(label)}</span>`;
+  return `<span style="display:inline-block;background:${colors.badge};color:${colors.badgeText};font-family:'Montserrat',sans-serif;font-weight:700;font-size:14px;padding:8px 18px;letter-spacing:2.5px;margin-right:12px;vertical-align:middle;">${escapeHtml(label)}</span>`;
 }
 
 function buildSectionHeader(text, colors, fontSize) {
   if (!text) return '';
-  return `<div style="font-family:'Raleway','Montserrat',sans-serif;font-weight:800;font-size:${fontSize || '12px'};letter-spacing:3px;color:${colors.accent};text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
-    <span style="display:inline-block;width:30px;height:2px;background:${colors.accent};"></span>
+  return `<div style="font-family:'Raleway','Montserrat',sans-serif;font-weight:800;font-size:${fontSize || '15px'};letter-spacing:3px;color:${colors.accent};text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+    <span style="display:inline-block;width:30px;height:3px;background:${colors.accent};"></span>
     ${escapeHtml(text)}
   </div>`;
 }
 
 function buildLocationHtml(location, colors, fontSize) {
   if (!location) return '';
-  return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-    ${svgIcon('pin', colors.accent, parseInt(fontSize) || 18)}
-    <span style="font-family:'Montserrat',sans-serif;font-size:${fontSize || '14px'};color:${colors.textSecondary};letter-spacing:1.5px;text-transform:uppercase;">${escapeHtml(location)}</span>
+  const fs = parseInt(fontSize) || 16;
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+    ${svgIcon('pin', colors.accent, fs + 2)}
+    <span style="font-family:'Montserrat',sans-serif;font-size:${fs}px;color:${colors.textSecondary};letter-spacing:1.5px;text-transform:uppercase;">${escapeHtml(location)}</span>
   </div>`;
 }
 
@@ -299,19 +300,20 @@ function buildPropertyStats(property, colors, isCompact, labels) {
   if (property.area) stats.push({ icon: 'area', value: property.area, label: '' });
   if (stats.length === 0) return '';
 
-  const iconSize = isCompact ? 16 : 20;
-  const fontSize = isCompact ? '13px' : '15px';
-  const gap = isCompact ? '16px' : '24px';
+  const iconSize = isCompact ? 20 : 24;
+  const fontSize = isCompact ? '16px' : '18px';
+  const labelSize = isCompact ? '13px' : '14px';
+  const gap = isCompact ? '20px' : '28px';
 
   const items = stats.map(s =>
-    `<div style="display:flex;align-items:center;gap:6px;">
+    `<div style="display:flex;align-items:center;gap:8px;">
       ${svgIcon(s.icon, colors.accent, iconSize)}
       <span style="font-family:'Montserrat',sans-serif;font-weight:600;font-size:${fontSize};color:${colors.text};">${escapeHtml(String(s.value))}</span>
-      ${s.label ? `<span style="font-family:'Montserrat',sans-serif;font-size:${isCompact ? '11px' : '12px'};color:${colors.textSecondary};letter-spacing:1px;">${escapeHtml(s.label)}</span>` : ''}
+      ${s.label ? `<span style="font-family:'Montserrat',sans-serif;font-size:${labelSize};color:${colors.textSecondary};letter-spacing:1px;">${escapeHtml(s.label)}</span>` : ''}
     </div>`
   ).join('');
 
-  return `<div style="display:flex;align-items:center;gap:${gap};margin:8px 0;">${items}</div>`;
+  return `<div style="display:flex;align-items:center;gap:${gap};margin:10px 0;">${items}</div>`;
 }
 
 function buildFeaturesHtml(features, colors, labels, maxItems) {
@@ -319,17 +321,17 @@ function buildFeaturesHtml(features, colors, labels, maxItems) {
   const items = features.slice(0, maxItems || 6);
 
   const header = labels.features
-    ? buildSectionHeader(labels.features, colors, '11px')
+    ? buildSectionHeader(labels.features, colors, '14px')
     : '';
 
   const list = items.map(f =>
-    `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-      ${svgIcon('check', colors.accent, 16)}
-      <span style="font-family:'Montserrat',sans-serif;font-size:13px;color:${colors.text};line-height:1.3;">${escapeHtml(f)}</span>
+    `<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
+      ${svgIcon('check', colors.accent, 20)}
+      <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.text};line-height:1.4;">${escapeHtml(f)}</span>
     </div>`
   ).join('');
 
-  return `<div style="margin-top:8px;">${header}${list}</div>`;
+  return `<div style="margin-top:10px;">${header}${list}</div>`;
 }
 
 function buildContactSection(colors, size, labels, style) {
@@ -340,50 +342,50 @@ function buildContactSection(colors, size, labels, style) {
   if (style === 'panel') {
     // Embedded contact section (used inside info panels)
     const ctaHeader = labels.contact
-      ? `<div style="font-family:'Raleway','Montserrat',sans-serif;font-weight:800;font-size:11px;letter-spacing:3px;color:${colors.accent};text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
-          <span style="display:inline-block;width:30px;height:2px;background:${colors.accent};"></span>
+      ? `<div style="font-family:'Raleway','Montserrat',sans-serif;font-weight:800;font-size:14px;letter-spacing:3px;color:${colors.accent};text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+          <span style="display:inline-block;width:30px;height:3px;background:${colors.accent};"></span>
           ${escapeHtml(labels.contact)}
         </div>`
       : '';
 
-    return `<div style="margin-top:12px;">
+    return `<div style="margin-top:14px;">
       ${ctaHeader}
-      ${agent.phone ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-        ${svgIcon('phone', colors.accent, 16)}
-        <span style="font-family:'Montserrat',sans-serif;font-size:13px;color:${colors.text};">${escapeHtml(agent.phone)}</span>
+      ${agent.phone ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
+        ${svgIcon('phone', colors.accent, 20)}
+        <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.text};">${escapeHtml(agent.phone)}</span>
       </div>` : ''}
-      ${agent.email ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-        ${svgIcon('email', colors.accent, 16)}
-        <span style="font-family:'Montserrat',sans-serif;font-size:13px;color:${colors.text};">${escapeHtml(agent.email)}</span>
+      ${agent.email ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
+        ${svgIcon('email', colors.accent, 20)}
+        <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.text};">${escapeHtml(agent.email)}</span>
       </div>` : ''}
-      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
-        ${agent.logo ? `<img src="${agent.logo}" style="height:32px;width:32px;object-fit:cover;border-radius:50%;border:2px solid ${colors.accent};" crossorigin="anonymous" onerror="this.style.display='none'"/>` : ''}
+      <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
+        ${agent.logo ? `<img src="${agent.logo}" style="height:40px;width:40px;object-fit:cover;border-radius:50%;border:2px solid ${colors.accent};" crossorigin="anonymous" onerror="this.style.display='none'"/>` : ''}
         <div>
-          <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:${colors.text};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(agent.name)}</div>
-          ${agent.title ? `<div style="font-family:'Montserrat',sans-serif;font-size:10px;color:${colors.textSecondary};letter-spacing:0.5px;">${escapeHtml(agent.title)}</div>` : ''}
+          <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:16px;color:${colors.text};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(agent.name)}</div>
+          ${agent.title ? `<div style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.textSecondary};letter-spacing:0.5px;">${escapeHtml(agent.title)}</div>` : ''}
         </div>
       </div>
     </div>`;
   }
 
   // 'bar' style — bottom-anchored enhanced bar
-  const barHeight = isFB ? '80px' : '90px';
-  const nameSize = isFB ? '12px' : '13px';
-  const infoSize = isFB ? '11px' : '12px';
+  const barHeight = isFB ? '85px' : '95px';
+  const nameSize = isFB ? '14px' : '16px';
+  const infoSize = isFB ? '13px' : '14px';
 
-  return `<div style="position:absolute;bottom:0;left:0;right:0;height:${barHeight};background:${colors.bgSecondary};display:flex;align-items:center;padding:0 28px;gap:16px;border-top:3px solid ${colors.accent};">
-    ${agent.logo ? `<img src="${agent.logo}" style="height:42px;width:42px;object-fit:cover;border-radius:50%;border:2px solid ${colors.accent};" crossorigin="anonymous" onerror="this.style.display='none'"/>` : ''}
+  return `<div style="position:absolute;bottom:0;left:0;right:0;height:${barHeight};background:${colors.bgSecondary};display:flex;align-items:center;padding:0 32px;gap:18px;border-top:3px solid ${colors.accent};">
+    ${agent.logo ? `<img src="${agent.logo}" style="height:48px;width:48px;object-fit:cover;border-radius:50%;border:2px solid ${colors.accent};" crossorigin="anonymous" onerror="this.style.display='none'"/>` : ''}
     <div style="flex:1;min-width:0;">
       <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:${nameSize};color:${colors.text};letter-spacing:1.5px;text-transform:uppercase;">${escapeHtml(agent.name)}</div>
-      ${agent.title ? `<div style="font-family:'Montserrat',sans-serif;font-size:${isFB ? '9px' : '10px'};color:${colors.textSecondary};margin-top:1px;">${escapeHtml(agent.title)}</div>` : ''}
+      ${agent.title ? `<div style="font-family:'Montserrat',sans-serif;font-size:${isFB ? '12px' : '13px'};color:${colors.textSecondary};margin-top:2px;">${escapeHtml(agent.title)}</div>` : ''}
     </div>
-    <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;">
-      ${agent.phone ? `<div style="display:flex;align-items:center;gap:6px;">
-        ${svgIcon('phone', colors.accent, 14)}
+    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
+      ${agent.phone ? `<div style="display:flex;align-items:center;gap:8px;">
+        ${svgIcon('phone', colors.accent, 16)}
         <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.textSecondary};">${escapeHtml(agent.phone)}</span>
       </div>` : ''}
-      ${agent.email ? `<div style="display:flex;align-items:center;gap:6px;">
-        ${svgIcon('email', colors.accent, 14)}
+      ${agent.email ? `<div style="display:flex;align-items:center;gap:8px;">
+        ${svgIcon('email', colors.accent, 16)}
         <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.textSecondary};">${escapeHtml(agent.email)}</span>
       </div>` : ''}
     </div>
@@ -424,9 +426,9 @@ function renderHeroSingle(property, colors, size, postType, openHouse, labels) {
   }
 
   // Square (instagram-post) and Facebook
-  const panelWidth = isFB ? '42%' : '44%';
-  const titleSize = isFB ? '24px' : '30px';
-  const priceSize = isFB ? '22px' : '28px';
+  const panelWidth = isFB ? '44%' : '46%';
+  const titleSize = isFB ? '28px' : '36px';
+  const priceSize = isFB ? '26px' : '32px';
 
   return `
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
@@ -440,7 +442,7 @@ function renderHeroSingle(property, colors, size, postType, openHouse, labels) {
         <div style="width:40px;height:3px;background:${colors.accent};margin-bottom:14px;"></div>
         ${buildPriceHtml(property, postType, colors, priceSize, 'banner')}
         <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${titleSize};color:${colors.text};line-height:1.15;margin-bottom:10px;">${escapeHtml(truncate(property.title, 50))}</div>
-        ${buildLocationHtml(property.location, colors, isFB ? '12px' : '13px')}
+        ${buildLocationHtml(property.location, colors, isFB ? '14' : '16')}
         ${buildPropertyStats(property, colors, isFB, labels)}
         ${buildFeaturesHtml(property.features, colors, labels, isFB ? 3 : 4)}
         ${buildContactSection(colors, size, labels, 'panel')}
@@ -485,19 +487,19 @@ function renderSplitDuo(property, colors, size, postType, openHouse, labels) {
       </div>`;
   }
 
-  // Square and Facebook: info panel left ~40%, two photos stacked right ~60%
-  const panelWidth = isFB ? '38%' : '40%';
-  const photoWidth = isFB ? '62%' : '60%';
+  // Square and Facebook: info panel left ~42%, two photos stacked right ~58%
+  const panelWidth = isFB ? '40%' : '44%';
+  const photoWidth = isFB ? '60%' : '56%';
 
   return `
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
       <!-- Info panel left -->
-      <div style="position:absolute;top:0;left:0;bottom:0;width:${panelWidth};background:${colors.bg};padding:${isFB ? '20px 24px' : '30px 32px'};display:flex;flex-direction:column;justify-content:center;z-index:2;">
+      <div style="position:absolute;top:0;left:0;bottom:0;width:${panelWidth};background:${colors.bg};padding:${isFB ? '24px 28px' : '34px 36px'};display:flex;flex-direction:column;justify-content:center;z-index:2;">
         ${buildInlineBadge(postType, colors, labels)}
-        <div style="width:40px;height:3px;background:${colors.accent};margin:10px 0;"></div>
-        ${buildPriceHtml(property, postType, colors, isFB ? '22px' : '26px', 'banner')}
-        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '22px' : '28px'};color:${colors.text};line-height:1.15;margin-bottom:8px;">${escapeHtml(truncate(property.title, 45))}</div>
-        ${buildLocationHtml(property.location, colors, isFB ? '11px' : '13px')}
+        <div style="width:40px;height:3px;background:${colors.accent};margin:12px 0;"></div>
+        ${buildPriceHtml(property, postType, colors, isFB ? '26px' : '30px', 'banner')}
+        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '26px' : '32px'};color:${colors.text};line-height:1.15;margin-bottom:10px;">${escapeHtml(truncate(property.title, 45))}</div>
+        ${buildLocationHtml(property.location, colors, isFB ? '13' : '15')}
         ${buildPropertyStats(property, colors, isFB, labels)}
         ${buildFeaturesHtml(property.features, colors, labels, isFB ? 3 : 5)}
         ${buildContactSection(colors, size, labels, 'panel')}
@@ -547,8 +549,8 @@ function renderFeatureTrio(property, colors, size, postType, openHouse, labels) 
   }
 
   // Square and Facebook: L-shape photo grid top + info bar bottom
-  const photoHeight = isFB ? '62%' : '60%';
-  const barHeight = isFB ? '80px' : '90px';
+  const photoHeight = isFB ? '58%' : '56%';
+  const barHeight = isFB ? '85px' : '95px';
 
   return `
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
@@ -558,9 +560,9 @@ function renderFeatureTrio(property, colors, size, postType, openHouse, labels) 
         <div style="flex:1.2;overflow:hidden;position:relative;">
           <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/>
           <!-- Floating info on large photo -->
-          <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top, ${colors.bg}ee 0%, ${colors.bg}cc 60%, transparent 100%);padding:16px 20px;">
-            ${buildPriceHtml(property, postType, colors, isFB ? '22px' : '26px', 'inline')}
-            <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '20px' : '24px'};color:${colors.text};line-height:1.15;">${escapeHtml(truncate(property.title, 40))}</div>
+          <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top, ${colors.bg}ee 0%, ${colors.bg}cc 60%, transparent 100%);padding:20px 24px;">
+            ${buildPriceHtml(property, postType, colors, isFB ? '26px' : '32px', 'inline')}
+            <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '24px' : '30px'};color:${colors.text};line-height:1.15;">${escapeHtml(truncate(property.title, 40))}</div>
           </div>
         </div>
         <div style="flex:0.8;display:flex;flex-direction:column;gap:4px;">
@@ -569,16 +571,16 @@ function renderFeatureTrio(property, colors, size, postType, openHouse, labels) 
         </div>
       </div>
       <!-- Info section below photos -->
-      <div style="position:absolute;bottom:${parseInt(barHeight)}px;left:0;right:0;top:${photoHeight};background:${colors.bg};padding:${isFB ? '10px 28px' : '14px 32px'};display:flex;align-items:center;gap:24px;border-top:3px solid ${colors.accent};">
+      <div style="position:absolute;bottom:${parseInt(barHeight)}px;left:0;right:0;top:${photoHeight};background:${colors.bg};padding:${isFB ? '14px 28px' : '18px 36px'};display:flex;align-items:center;gap:28px;border-top:3px solid ${colors.accent};">
         <div style="flex:1;min-width:0;">
-          ${buildLocationHtml(property.location, colors, isFB ? '11px' : '12px')}
-          ${buildPropertyStats(property, colors, true, labels)}
+          ${buildLocationHtml(property.location, colors, isFB ? '14' : '16')}
+          ${buildPropertyStats(property, colors, false, labels)}
         </div>
-        <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
           ${property.features ? property.features.slice(0, 3).map(f =>
-            `<div style="display:flex;align-items:center;gap:6px;">
-              ${svgIcon('check', colors.accent, 14)}
-              <span style="font-family:'Montserrat',sans-serif;font-size:11px;color:${colors.text};">${escapeHtml(f)}</span>
+            `<div style="display:flex;align-items:center;gap:8px;">
+              ${svgIcon('check', colors.accent, 18)}
+              <span style="font-family:'Montserrat',sans-serif;font-size:15px;color:${colors.text};">${escapeHtml(f)}</span>
             </div>`
           ).join('') : ''}
         </div>
@@ -622,9 +624,9 @@ function renderGridQuad(property, colors, size, postType, openHouse, labels) {
   }
 
   // Square and Facebook: 2x2 grid fills canvas + central floating overlay
-  const barHeight = isFB ? 80 : 90;
-  const overlayWidth = isFB ? '340px' : '420px';
-  const overlayPad = isFB ? '18px 24px' : '24px 32px';
+  const barHeight = isFB ? 85 : 95;
+  const overlayWidth = isFB ? '380px' : '480px';
+  const overlayPad = isFB ? '22px 28px' : '30px 38px';
 
   return `
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
@@ -635,14 +637,14 @@ function renderGridQuad(property, colors, size, postType, openHouse, labels) {
       </div>
       <!-- Central floating overlay -->
       <div style="position:absolute;top:50%;left:50%;transform:translate(-50%, -55%);width:${overlayWidth};background:${colors.bgPanel};border:2px solid ${colors.accent};padding:${overlayPad};z-index:5;text-align:center;">
-        ${buildPriceHtml(property, postType, colors, isFB ? '24px' : '28px', 'inline')}
-        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '22px' : '26px'};color:${colors.text};line-height:1.2;margin-bottom:8px;">${escapeHtml(truncate(property.title, 40))}</div>
-        ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px;">
-          ${svgIcon('pin', colors.accent, 16)}
-          <span style="font-family:'Montserrat',sans-serif;font-size:12px;color:${colors.textSecondary};letter-spacing:1.5px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
+        ${buildPriceHtml(property, postType, colors, isFB ? '28px' : '34px', 'inline')}
+        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '26px' : '32px'};color:${colors.text};line-height:1.2;margin-bottom:10px;">${escapeHtml(truncate(property.title, 40))}</div>
+        ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">
+          ${svgIcon('pin', colors.accent, 18)}
+          <span style="font-family:'Montserrat',sans-serif;font-size:15px;color:${colors.textSecondary};letter-spacing:1.5px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
         </div>` : ''}
-        <div style="width:50px;height:2px;background:${colors.accent};margin:8px auto;"></div>
-        <div style="display:flex;justify-content:center;">${buildPropertyStats(property, colors, true, labels)}</div>
+        <div style="width:50px;height:2px;background:${colors.accent};margin:10px auto;"></div>
+        <div style="display:flex;justify-content:center;">${buildPropertyStats(property, colors, false, labels)}</div>
       </div>
       ${buildContactSection(colors, size, labels, 'bar')}
     </div>`;
@@ -653,15 +655,15 @@ function renderGridSix(property, colors, size, postType, openHouse, labels) {
   const photos = buildPhotoSlots(property.photos, 6);
   const isStory = size === 'instagram-story';
   const isFB = size === 'facebook-post';
-  const barHeight = isFB ? 80 : 90;
+  const barHeight = isFB ? 85 : 95;
 
   // Header height varies by size
-  const headerHeight = isStory ? 130 : (isFB ? 100 : 120);
+  const headerHeight = isStory ? 150 : (isFB ? 110 : 130);
 
   // Open house extra info
   let openHouseInfo = '';
   if (postType === 'open-house' && openHouse) {
-    openHouseInfo = `<div style="font-family:'Montserrat',sans-serif;font-size:11px;color:${colors.text};margin-top:4px;">
+    openHouseInfo = `<div style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.text};margin-top:4px;">
       ${openHouse.date ? escapeHtml(openHouse.date) : ''}${openHouse.date && openHouse.time ? ' · ' : ''}${openHouse.time ? escapeHtml(openHouse.time) : ''}
     </div>`;
   }
@@ -674,13 +676,13 @@ function renderGridSix(property, colors, size, postType, openHouse, labels) {
         <div style="padding:24px 32px;background:${colors.bg};height:${headerHeight}px;display:flex;flex-direction:column;justify-content:center;border-bottom:3px solid ${colors.accent};">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
             ${buildInlineBadge(postType, colors, labels)}
-            <span style="font-family:'Playfair Display',serif;font-weight:700;font-size:22px;color:${colors.text};">${escapeHtml(truncate(property.title, 35))}</span>
+            <span style="font-family:'Playfair Display',serif;font-weight:700;font-size:26px;color:${colors.text};">${escapeHtml(truncate(property.title, 35))}</span>
           </div>
           <div style="display:flex;align-items:center;gap:16px;">
-            ${buildPriceHtml(property, postType, colors, '18px', 'highlight')}
+            ${buildPriceHtml(property, postType, colors, '22px', 'highlight')}
             ${property.location ? `<div style="display:flex;align-items:center;gap:4px;">
               ${svgIcon('pin', colors.accent, 14)}
-              <span style="font-family:'Montserrat',sans-serif;font-size:11px;color:${colors.textSecondary};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
+              <span style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.textSecondary};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
             </div>` : ''}
           </div>
           ${openHouseInfo}
@@ -702,16 +704,16 @@ function renderGridSix(property, colors, size, postType, openHouse, labels) {
   return `
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
       <!-- Header strip -->
-      <div style="padding:${isFB ? '12px 24px' : '18px 32px'};background:${colors.bg};height:${headerHeight}px;display:flex;flex-direction:column;justify-content:center;border-bottom:3px solid ${colors.accent};">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+      <div style="padding:${isFB ? '14px 28px' : '20px 36px'};background:${colors.bg};height:${headerHeight}px;display:flex;flex-direction:column;justify-content:center;border-bottom:3px solid ${colors.accent};">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
           ${buildInlineBadge(postType, colors, labels)}
-          <span style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '18px' : '22px'};color:${colors.text};">${escapeHtml(truncate(property.title, 35))}</span>
+          <span style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '22px' : '26px'};color:${colors.text};">${escapeHtml(truncate(property.title, 35))}</span>
         </div>
-        <div style="display:flex;align-items:center;gap:16px;">
-          ${buildPriceHtml(property, postType, colors, isFB ? '16px' : '18px', 'highlight')}
-          ${property.location ? `<div style="display:flex;align-items:center;gap:4px;">
-            ${svgIcon('pin', colors.accent, 14)}
-            <span style="font-family:'Montserrat',sans-serif;font-size:11px;color:${colors.textSecondary};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
+        <div style="display:flex;align-items:center;gap:18px;">
+          ${buildPriceHtml(property, postType, colors, isFB ? '20px' : '22px', 'highlight')}
+          ${property.location ? `<div style="display:flex;align-items:center;gap:6px;">
+            ${svgIcon('pin', colors.accent, 16)}
+            <span style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.textSecondary};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
           </div>` : ''}
         </div>
         ${openHouseInfo}
@@ -742,10 +744,10 @@ function renderCarouselSlides(property, colors, size, postType, openHouse, label
         <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isStory ? '40px' : '36px'};color:${colors.text};line-height:1.15;margin-bottom:10px;">${escapeHtml(truncate(property.title, 50))}</div>
         ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">
           ${svgIcon('pin', colors.text, 18)}
-          <span style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.textSecondary};letter-spacing:2px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
+          <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.textSecondary};letter-spacing:2px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
         </div>` : ''}
         <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;">
-          <span style="font-family:'Montserrat',sans-serif;font-size:13px;color:${colors.textSecondary};letter-spacing:1.5px;">${escapeHtml(labels.swipeForMore)}</span>
+          <span style="font-family:'Montserrat',sans-serif;font-size:15px;color:${colors.textSecondary};letter-spacing:1.5px;">${escapeHtml(labels.swipeForMore)}</span>
           ${svgIcon('arrow', colors.accent, 18)}
         </div>
       </div>
@@ -760,9 +762,9 @@ function renderCarouselSlides(property, colors, size, postType, openHouse, label
         <div style="position:absolute;bottom:0;left:0;right:0;height:70px;background:linear-gradient(to top, ${colors.bg}ee, transparent);display:flex;align-items:flex-end;padding:0 24px 16px;justify-content:space-between;">
           ${property.location ? `<div style="display:flex;align-items:center;gap:6px;">
             ${svgIcon('pin', colors.accent, 14)}
-            <span style="font-family:'Montserrat',sans-serif;font-size:12px;color:${colors.text};letter-spacing:1px;">${escapeHtml(property.location)}</span>
+            <span style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.text};letter-spacing:1px;">${escapeHtml(property.location)}</span>
           </div>` : '<div></div>'}
-          <div style="font-family:'Montserrat',sans-serif;font-size:12px;color:${colors.textSecondary};background:${colors.bgPanel};padding:4px 12px;border-radius:12px;letter-spacing:1px;">${i + 1}/${photos.length + 1}</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.textSecondary};background:${colors.bgPanel};padding:4px 12px;border-radius:12px;letter-spacing:1px;">${i + 1}/${photos.length + 1}</div>
         </div>
         <!-- Accent frame top -->
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${colors.accent};"></div>
@@ -777,10 +779,10 @@ function renderCarouselSlides(property, colors, size, postType, openHouse, label
       <div style="position:absolute;bottom:0;right:0;width:80px;height:80px;border-bottom:4px solid ${colors.accent};border-right:4px solid ${colors.accent};"></div>
 
       <div style="text-align:center;width:100%;max-width:600px;">
-        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isStory ? '34px' : '30px'};color:${colors.text};line-height:1.2;margin-bottom:12px;">${escapeHtml(truncate(property.title, 50))}</div>
+        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isStory ? '38px' : '34px'};color:${colors.text};line-height:1.2;margin-bottom:12px;">${escapeHtml(truncate(property.title, 50))}</div>
         ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;">
           ${svgIcon('pin', colors.accent, 18)}
-          <span style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.textSecondary};letter-spacing:2px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
+          <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.textSecondary};letter-spacing:2px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
         </div>` : ''}
         ${buildPriceHtml(property, postType, colors, isStory ? '36px' : '32px', 'banner')}
         <div style="width:60px;height:2px;background:${colors.accent};margin:16px auto;"></div>
@@ -792,7 +794,7 @@ function renderCarouselSlides(property, colors, size, postType, openHouse, label
         ${buildFeaturesHtml(property.features, colors, labels, 6)}
       </div>
 
-      ${property.description ? `<div style="font-family:'Montserrat',sans-serif;font-size:13px;color:${colors.textSecondary};line-height:1.6;margin-top:20px;max-width:500px;text-align:center;">${escapeHtml(truncate(property.description, 180))}</div>` : ''}
+      ${property.description ? `<div style="font-family:'Montserrat',sans-serif;font-size:15px;color:${colors.textSecondary};line-height:1.6;margin-top:20px;max-width:500px;text-align:center;">${escapeHtml(truncate(property.description, 180))}</div>` : ''}
 
       <!-- Contact section -->
       <div style="width:100%;max-width:500px;margin-top:16px;text-align:left;">

@@ -35,7 +35,7 @@ async function getBrowser() {
  * Download an image URL and return as base64 data URI.
  * Handles redirects, HTTPS, and various content types.
  */
-function downloadImageAsBase64(url, maxRedirects = 5) {
+function downloadImageAsBase64(url, maxRedirects = 8) {
   return new Promise((resolve, reject) => {
     if (!url || url.startsWith('data:')) {
       return resolve(url); // Already a data URI or empty
@@ -43,13 +43,24 @@ function downloadImageAsBase64(url, maxRedirects = 5) {
 
     const client = url.startsWith('https') ? https : http;
 
-    const req = client.get(url, { timeout: 15000, headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    }}, (res) => {
+    const req = client.get(url, {
+      timeout: 30000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'image/*,*/*;q=0.8',
+        'Accept-Encoding': 'identity'
+      }
+    }, (res) => {
       // Handle redirects
       if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
         if (maxRedirects <= 0) return reject(new Error('Too many redirects'));
-        return downloadImageAsBase64(res.headers.location, maxRedirects - 1).then(resolve).catch(reject);
+        let redirectUrl = res.headers.location;
+        // Handle relative redirects
+        if (redirectUrl.startsWith('/')) {
+          const parsed = new URL(url);
+          redirectUrl = `${parsed.protocol}//${parsed.host}${redirectUrl}`;
+        }
+        return downloadImageAsBase64(redirectUrl, maxRedirects - 1).then(resolve).catch(reject);
       }
 
       if (res.statusCode !== 200) {
@@ -63,6 +74,9 @@ function downloadImageAsBase64(url, maxRedirects = 5) {
       res.on('data', chunk => chunks.push(chunk));
       res.on('end', () => {
         const buffer = Buffer.concat(chunks);
+        if (buffer.length < 100) {
+          return reject(new Error('Image too small, likely an error page'));
+        }
         const base64 = buffer.toString('base64');
         resolve(`data:${mime};base64,${base64}`);
       });
@@ -72,6 +86,24 @@ function downloadImageAsBase64(url, maxRedirects = 5) {
     req.on('error', reject);
     req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
   });
+}
+
+/**
+ * Try downloading with retry logic.
+ */
+async function downloadWithRetry(url, retries = 2) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await downloadImageAsBase64(url);
+    } catch (err) {
+      console.error(`[Download] Attempt ${attempt + 1} failed: ${err.message}`);
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1))); // backoff
+      } else {
+        throw err;
+      }
+    }
+  }
 }
 
 /**
@@ -85,12 +117,12 @@ async function preDownloadPhotos(property) {
 
   for (const photoUrl of property.photos) {
     try {
-      console.log(`[Download] Fetching: ${photoUrl.substring(0, 80)}...`);
-      const dataUri = await downloadImageAsBase64(photoUrl);
+      console.log(`[Download] Fetching: ${photoUrl.substring(0, 100)}...`);
+      const dataUri = await downloadWithRetry(photoUrl);
       downloaded.photos.push(dataUri);
       console.log(`[Download] OK (${Math.round(dataUri.length / 1024)}KB base64)`);
     } catch (err) {
-      console.error(`[Download] Failed: ${err.message} — using placeholder`);
+      console.error(`[Download] Failed after retries: ${err.message} — using placeholder`);
       downloaded.photos.push(null); // Will become placeholder in template
     }
   }
