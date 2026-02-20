@@ -156,12 +156,12 @@ components:
                 - carousel-slides
               description: |
                 The photo layout style.
-                hero-single: 1 large hero image with text overlay.
-                split-duo: 2 photos side by side with info bar.
-                feature-trio: 1 large + 2 stacked photos.
-                grid-quad: 4 photos in a grid.
-                grid-six: 6 photos in a 3x2 grid.
-                carousel-slides: Multiple slides for Instagram carousel.
+                hero-single: 1 hero photo with info panel overlay (left/bottom), features checklist, contact icons, price banner.
+                split-duo: Info panel on left + 2 photos stacked right, full details with features and contact.
+                feature-trio: L-shape photos (1 large + 2 small) with info bar, price overlay on main photo.
+                grid-quad: 4 photos in 2x2 grid with central floating info overlay.
+                grid-six: 6 photos in 3x2 grid with bold header strip.
+                carousel-slides: Cover slide + photo slides + details slide with features checklist.
             postType:
               type: string
               enum:
@@ -285,6 +285,53 @@ components:
               type: string
               description: Open house time range
               example: "10:00 AM - 2:00 PM"
+        labels:
+          type: object
+          description: |
+            Optional text labels for internationalization. Pass any subset of keys
+            to override English defaults. Useful for generating posts in Spanish
+            or any other language. All keys are optional.
+          properties:
+            newListing:
+              type: string
+              description: Badge text for new listing posts
+              example: "NUEVA PROPIEDAD"
+            openHouse:
+              type: string
+              description: Badge text for open house posts
+              example: "CASA ABIERTA"
+            justSold:
+              type: string
+              description: Badge text for just sold posts
+              example: "VENDIDA"
+            priceReduced:
+              type: string
+              description: Badge text for price drop posts
+              example: "PRECIO REDUCIDO"
+            comingSoon:
+              type: string
+              description: Badge text for coming soon posts
+              example: "PRÓXIMAMENTE"
+            features:
+              type: string
+              description: Section header for features list
+              example: "CARACTERÍSTICAS"
+            contact:
+              type: string
+              description: Call-to-action text for contact section
+              example: "¡CONTÁCTANOS PARA MÁS!"
+            bedrooms:
+              type: string
+              description: Label for bedrooms stat
+              example: "HAB"
+            bathrooms:
+              type: string
+              description: Label for bathrooms stat
+              example: "BAÑOS"
+            swipeForMore:
+              type: string
+              description: Carousel swipe indicator text
+              example: "DESLIZA PARA VER MÁS"
 
     SingleImageResponse:
       type: object

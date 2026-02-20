@@ -5,7 +5,7 @@ const { LAYOUTS, POST_TYPES, THEME_NAMES, SIZE_NAMES } = require('../services/te
 
 router.post('/', async (req, res) => {
   try {
-    const { template, property, openHouse } = req.body;
+    const { template, property, openHouse, labels } = req.body;
 
     // Validate required fields
     if (!template) {
@@ -49,7 +49,7 @@ router.post('/', async (req, res) => {
     }
 
     console.log(`[Generate] ${layout} / ${postType} / ${colorTheme} / ${size}`);
-    const result = await generateImage(template, property, openHouse);
+    const result = await generateImage(template, property, openHouse, labels);
 
     if (result.type === 'carousel') {
       return res.json({

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { LAYOUTS, POST_TYPES, THEME_NAMES, SIZE_NAMES, SIZES } = require('../services/templateEngine');
+const { LAYOUTS, POST_TYPES, THEME_NAMES, SIZE_NAMES, SIZES, DEFAULT_LABELS } = require('../services/templateEngine');
 const { generateImage } = require('../services/renderer');
 
 // GET /templates — list all available template options
@@ -26,7 +26,19 @@ router.get('/', (req, res) => {
       id: s,
       name: formatName(s),
       dimensions: SIZES[s]
-    }))
+    })),
+    labels: {
+      description: 'Optional object to customize text labels for any language. Pass any subset — missing keys use English defaults.',
+      defaults: DEFAULT_LABELS,
+      example: {
+        newListing: 'NUEVA PROPIEDAD',
+        features: 'CARACTERÍSTICAS',
+        contact: '¡CONTÁCTANOS PARA MÁS!',
+        bedrooms: 'HAB',
+        bathrooms: 'BAÑOS',
+        swipeForMore: 'DESLIZA PARA VER MÁS'
+      }
+    }
   });
 });
 
@@ -52,7 +64,7 @@ router.get('/preview/:combo', async (req, res) => {
       bedrooms: 3,
       bathrooms: 2,
       area: '185 m²',
-      features: ['Ocean View', 'Pool', 'Gym', '24hr Security'],
+      features: ['Ocean View', 'Pool', 'Gym', '24hr Security', 'Parking', 'Balcony'],
       description: 'Stunning 3-bedroom apartment with panoramic ocean views in one of Panama City\'s most prestigious neighborhoods.',
       photos: [
         'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80',
@@ -85,12 +97,12 @@ function formatName(id) {
 
 function getLayoutDescription(layout) {
   const desc = {
-    'hero-single': '1 large hero image with text overlay — perfect for showcasing the best photo',
-    'split-duo': '2 photos side by side with info bar at bottom',
-    'feature-trio': '1 large photo on left, 2 stacked on right — great for showing multiple angles',
-    'grid-quad': '4 photos in a grid with info banner at top',
-    'grid-six': '6 photos in a 3×2 grid with minimal text overlay',
-    'carousel-slides': 'Multiple slide images for Instagram carousel (cover + photos + details)'
+    'hero-single': '1 hero photo with info panel overlay (left side or bottom) — features checklist, contact icons, price banner',
+    'split-duo': 'Info panel on left + 2 photos stacked on right — full property details with features and contact',
+    'feature-trio': '1 large + 2 stacked photos in L-shape with info bar — price overlay on main photo, stats and features below',
+    'grid-quad': '4 photos in 2x2 grid with central floating info overlay — dramatic window effect with price and details',
+    'grid-six': '6 photos in 3x2 grid with bold header strip — compact info bar with price highlight and location',
+    'carousel-slides': 'Multi-slide carousel: cover slide with hero overlay + individual photo slides + details slide with features checklist'
   };
   return desc[layout] || '';
 }
@@ -109,11 +121,11 @@ function getPhotoCount(layout) {
 
 function getPostTypeDescription(postType) {
   const desc = {
-    'new-listing': 'Highlights a new property listing with a "NEW LISTING" badge',
+    'new-listing': 'Highlights a new property listing with a badge',
     'open-house': 'Promotes an open house event with date and time',
-    'just-sold': 'Celebrates a sold property with a "SOLD" stamp',
+    'just-sold': 'Celebrates a sold property with a stamp',
     'price-drop': 'Announces a price reduction with old price crossed out',
-    'coming-soon': 'Teases an upcoming listing with a "COMING SOON" banner'
+    'coming-soon': 'Teases an upcoming listing with a banner'
   };
   return desc[postType] || '';
 }

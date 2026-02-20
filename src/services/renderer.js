@@ -122,7 +122,7 @@ async function renderHtmlToImage(html, width, height) {
   }
 }
 
-async function generateImage(templateConfig, property, openHouse) {
+async function generateImage(templateConfig, property, openHouse, labels) {
   const { size, layout } = templateConfig;
   const dim = SIZES[size];
 
@@ -133,7 +133,7 @@ async function generateImage(templateConfig, property, openHouse) {
   // Pre-download all photos as base64 before template rendering
   const processedProperty = await preDownloadPhotos(property);
 
-  const htmlResult = generateTemplate(templateConfig, processedProperty, openHouse);
+  const htmlResult = generateTemplate(templateConfig, processedProperty, openHouse, labels);
 
   // Ensure output directory exists
   if (!fs.existsSync(GENERATED_DIR)) {
