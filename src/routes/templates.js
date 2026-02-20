@@ -132,11 +132,11 @@ function getPostTypeDescription(postType) {
 
 function getThemeDescription(theme) {
   const desc = {
-    'dark': 'Dark background with white and gold text — dramatic and luxurious',
-    'light': 'White/cream background with dark text — clean and elegant',
-    'blue': 'Navy/blue tones — classic real estate professional look',
-    'gold': 'Black and gold — ultra luxury feel',
-    'minimal': 'Mostly white, thin fonts — modern and clean',
+    'dark': 'Rich dark background with bold gold accents — dramatic luxury feel',
+    'light': 'Warm cream background with vibrant orange accents — bright and inviting',
+    'blue': 'Light blue-gray background with vivid blue accents — modern professional',
+    'gold': 'Clean white background with deep burgundy/maroon panels — bold and elegant',
+    'minimal': 'Photo-dominant with dark overlays — sleek and modern',
     'custom': 'Custom primary and accent colors (pass customColors in request)'
   };
   return desc[theme] || '';

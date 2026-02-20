@@ -16,90 +16,153 @@ const SIZES = {
 // DEFAULT LABELS (configurable per request for i18n)
 // ============================================================
 const DEFAULT_LABELS = {
-  // Post type badges
   newListing: 'NEW LISTING',
   openHouse: 'OPEN HOUSE',
   justSold: 'SOLD',
   priceReduced: 'PRICE REDUCED',
   comingSoon: 'COMING SOON',
-  // Section headers
   features: 'FEATURES',
-  contact: 'CONTACT US FOR MORE!',
-  // Stats
+  contact: 'Contact',
   bedrooms: 'BD',
   bathrooms: 'BA',
-  // Carousel
+  bedroomsFull: 'Bedrooms',
+  bathroomsFull: 'Bathrooms',
+  areaLabel: 'Area',
+  visitUs: 'Visit Us',
   swipeForMore: 'SWIPE FOR MORE'
 };
 
 // ============================================================
-// COLOR THEME DEFINITIONS (enhanced with panel/divider colors)
+// FONT SCALE SYSTEM — centralized font sizes per output size
+// ============================================================
+const FONT_SCALES = {
+  'instagram-post': {
+    title: '52px', titleSecondary: '36px', price: '44px',
+    badge: '18px', statsValue: '28px', statsLabel: '14px',
+    feature: '20px', location: '18px', contactName: '18px',
+    contactInfo: '16px', sectionHeader: '16px', body: '18px'
+  },
+  'instagram-story': {
+    title: '64px', titleSecondary: '44px', price: '52px',
+    badge: '22px', statsValue: '32px', statsLabel: '16px',
+    feature: '22px', location: '20px', contactName: '20px',
+    contactInfo: '18px', sectionHeader: '18px', body: '20px'
+  },
+  'facebook-post': {
+    title: '40px', titleSecondary: '28px', price: '34px',
+    badge: '15px', statsValue: '22px', statsLabel: '12px',
+    feature: '16px', location: '15px', contactName: '16px',
+    contactInfo: '14px', sectionHeader: '14px', body: '15px'
+  }
+};
+
+function getFontScale(size) {
+  return FONT_SCALES[size] || FONT_SCALES['instagram-post'];
+}
+
+// ============================================================
+// COLOR THEME DEFINITIONS — Canva-quality vibrant themes
 // ============================================================
 const COLOR_THEMES = {
   dark: {
-    bg: '#1a1a1a',
-    bgSecondary: '#2d2d2d',
-    bgPanel: 'rgba(20, 20, 20, 0.93)',
+    bg: '#111111',
+    bgSecondary: '#1e1e1e',
+    bgPanel: 'rgba(17, 17, 17, 0.95)',
     text: '#ffffff',
-    textSecondary: '#b0b0b0',
-    accent: '#d4af37',
-    accentLight: 'rgba(212, 175, 55, 0.12)',
-    overlay: 'rgba(0, 0, 0, 0.65)',
-    badge: '#d4af37',
-    badgeText: '#1a1a1a',
-    divider: 'rgba(212, 175, 55, 0.25)'
+    textSecondary: '#aaaaaa',
+    accent: '#D4AF37',
+    accentLight: 'rgba(212, 175, 55, 0.15)',
+    overlay: 'rgba(0, 0, 0, 0.7)',
+    badge: '#D4AF37',
+    badgeText: '#111111',
+    divider: 'rgba(212, 175, 55, 0.3)',
+    panelSolid: '#D4AF37',
+    panelSolidText: '#111111',
+    footerBg: '#D4AF37',
+    footerText: '#111111',
+    photoRadius: '0px',
+    photoGap: '4px',
+    titleFont: 'Playfair Display'
   },
   light: {
-    bg: '#faf9f6',
-    bgSecondary: '#f0ede8',
-    bgPanel: 'rgba(250, 249, 246, 0.95)',
-    text: '#2c2c2c',
-    textSecondary: '#6b6b6b',
-    accent: '#b8860b',
-    accentLight: 'rgba(184, 134, 11, 0.08)',
-    overlay: 'rgba(255, 255, 255, 0.85)',
-    badge: '#2c2c2c',
-    badgeText: '#ffffff',
-    divider: 'rgba(184, 134, 11, 0.2)'
+    bg: '#FDF8F0',
+    bgSecondary: '#F5EDE0',
+    bgPanel: 'rgba(253, 248, 240, 0.97)',
+    text: '#2D2A26',
+    textSecondary: '#7A7268',
+    accent: '#E67E22',
+    accentLight: 'rgba(230, 126, 34, 0.1)',
+    overlay: 'rgba(253, 248, 240, 0.85)',
+    badge: '#E67E22',
+    badgeText: '#FFFFFF',
+    divider: 'rgba(230, 126, 34, 0.25)',
+    panelSolid: '#E67E22',
+    panelSolidText: '#FFFFFF',
+    footerBg: '#E67E22',
+    footerText: '#FFFFFF',
+    photoRadius: '12px',
+    photoGap: '12px',
+    titleFont: 'Montserrat'
   },
   blue: {
-    bg: '#0a1628',
-    bgSecondary: '#152238',
-    bgPanel: 'rgba(10, 22, 40, 0.94)',
-    text: '#ffffff',
-    textSecondary: '#8fa4c4',
-    accent: '#4a90d9',
-    accentLight: 'rgba(74, 144, 217, 0.12)',
-    overlay: 'rgba(10, 22, 40, 0.75)',
-    badge: '#4a90d9',
-    badgeText: '#ffffff',
-    divider: 'rgba(74, 144, 217, 0.25)'
+    bg: '#F0F4F8',
+    bgSecondary: '#E2E8F0',
+    bgPanel: 'rgba(240, 244, 248, 0.97)',
+    text: '#1A2B42',
+    textSecondary: '#5A6D85',
+    accent: '#2563EB',
+    accentLight: 'rgba(37, 99, 235, 0.08)',
+    overlay: 'rgba(26, 43, 66, 0.75)',
+    badge: '#2563EB',
+    badgeText: '#FFFFFF',
+    divider: 'rgba(37, 99, 235, 0.2)',
+    panelSolid: '#2563EB',
+    panelSolidText: '#FFFFFF',
+    footerBg: '#1A2B42',
+    footerText: '#FFFFFF',
+    photoRadius: '10px',
+    photoGap: '10px',
+    titleFont: 'Montserrat'
   },
   gold: {
-    bg: '#0d0d0d',
-    bgSecondary: '#1a1a1a',
-    bgPanel: 'rgba(13, 13, 13, 0.94)',
-    text: '#e8d5a3',
-    textSecondary: '#b8a06a',
-    accent: '#d4a520',
-    accentLight: 'rgba(212, 165, 32, 0.12)',
-    overlay: 'rgba(0, 0, 0, 0.7)',
-    badge: '#d4a520',
-    badgeText: '#0d0d0d',
-    divider: 'rgba(212, 165, 32, 0.25)'
+    bg: '#FFFFFF',
+    bgSecondary: '#F8F4F4',
+    bgPanel: 'rgba(255, 255, 255, 0.97)',
+    text: '#1A1A1A',
+    textSecondary: '#666666',
+    accent: '#7B2D26',
+    accentLight: 'rgba(123, 45, 38, 0.08)',
+    overlay: 'rgba(123, 45, 38, 0.82)',
+    badge: '#7B2D26',
+    badgeText: '#FFFFFF',
+    divider: 'rgba(123, 45, 38, 0.2)',
+    panelSolid: '#7B2D26',
+    panelSolidText: '#FFFFFF',
+    footerBg: '#7B2D26',
+    footerText: '#FFFFFF',
+    photoRadius: '12px',
+    photoGap: '10px',
+    titleFont: 'Montserrat'
   },
   minimal: {
-    bg: '#ffffff',
-    bgSecondary: '#f5f5f5',
-    bgPanel: 'rgba(255, 255, 255, 0.95)',
-    text: '#333333',
-    textSecondary: '#999999',
+    bg: '#FFFFFF',
+    bgSecondary: '#F5F5F5',
+    bgPanel: 'rgba(30, 30, 30, 0.88)',
+    text: '#1A1A1A',
+    textSecondary: '#777777',
     accent: '#333333',
     accentLight: 'rgba(51, 51, 51, 0.06)',
-    overlay: 'rgba(255, 255, 255, 0.9)',
+    overlay: 'rgba(30, 30, 30, 0.72)',
     badge: '#333333',
-    badgeText: '#ffffff',
-    divider: 'rgba(51, 51, 51, 0.15)'
+    badgeText: '#FFFFFF',
+    divider: 'rgba(51, 51, 51, 0.15)',
+    panelSolid: 'rgba(30, 30, 30, 0.88)',
+    panelSolidText: '#FFFFFF',
+    footerBg: '#1A1A1A',
+    footerText: '#FFFFFF',
+    photoRadius: '0px',
+    photoGap: '4px',
+    titleFont: 'Playfair Display'
   }
 };
 
@@ -121,19 +184,29 @@ function getColors(theme, customColors) {
     const b = parseInt(primary.slice(5, 7), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     const isDark = luminance < 0.5;
+    const ar = parseInt(accent.slice(1, 3), 16);
+    const ag = parseInt(accent.slice(3, 5), 16);
+    const ab = parseInt(accent.slice(5, 7), 16);
 
     return {
       bg: primary,
-      bgSecondary: isDark ? lighten(primary, 15) : darken(primary, 10),
-      bgPanel: isDark ? `rgba(${r}, ${g}, ${b}, 0.93)` : `rgba(${r}, ${g}, ${b}, 0.95)`,
+      bgSecondary: isDark ? lighten(primary, 12) : darken(primary, 8),
+      bgPanel: isDark ? `rgba(${r}, ${g}, ${b}, 0.95)` : `rgba(${r}, ${g}, ${b}, 0.97)`,
       text: isDark ? '#ffffff' : '#1a1a1a',
-      textSecondary: isDark ? '#b0b0b0' : '#6b6b6b',
+      textSecondary: isDark ? '#aaaaaa' : '#666666',
       accent: accent,
-      accentLight: isDark ? `rgba(${parseInt(accent.slice(1, 3), 16)}, ${parseInt(accent.slice(3, 5), 16)}, ${parseInt(accent.slice(5, 7), 16)}, 0.12)` : `rgba(${parseInt(accent.slice(1, 3), 16)}, ${parseInt(accent.slice(3, 5), 16)}, ${parseInt(accent.slice(5, 7), 16)}, 0.08)`,
-      overlay: isDark ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.85)',
+      accentLight: `rgba(${ar}, ${ag}, ${ab}, 0.1)`,
+      overlay: isDark ? 'rgba(0,0,0,0.7)' : `rgba(${r}, ${g}, ${b}, 0.85)`,
       badge: accent,
-      badgeText: isDark ? '#1a1a1a' : '#ffffff',
-      divider: isDark ? `rgba(${parseInt(accent.slice(1, 3), 16)}, ${parseInt(accent.slice(3, 5), 16)}, ${parseInt(accent.slice(5, 7), 16)}, 0.25)` : `rgba(${parseInt(accent.slice(1, 3), 16)}, ${parseInt(accent.slice(3, 5), 16)}, ${parseInt(accent.slice(5, 7), 16)}, 0.2)`
+      badgeText: isDark ? '#111111' : '#ffffff',
+      divider: `rgba(${ar}, ${ag}, ${ab}, 0.25)`,
+      panelSolid: accent,
+      panelSolidText: isDark ? '#111111' : '#ffffff',
+      footerBg: accent,
+      footerText: isDark ? '#111111' : '#ffffff',
+      photoRadius: isDark ? '0px' : '10px',
+      photoGap: isDark ? '4px' : '10px',
+      titleFont: isDark ? 'Playfair Display' : 'Montserrat'
     };
   }
   return COLOR_THEMES[theme] || COLOR_THEMES.dark;
@@ -168,7 +241,7 @@ function truncate(str, maxLen) {
 }
 
 // ============================================================
-// SVG ICON SYSTEM
+// SVG ICON SYSTEM (expanded with new icons)
 // ============================================================
 
 function svgIcon(name, color, sizePx) {
@@ -181,9 +254,30 @@ function svgIcon(name, color, sizePx) {
     bed: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2V10c0-2.21-1.79-4-4-4z" fill="${color}"/></svg>`,
     bath: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M7 7c0-1.1.9-2 2-2s2 .9 2 2H7zm13 6v4c0 1.1-.9 2-2 2h-.56c.35-.59.56-1.27.56-2H4c0 .73.21 1.41.56 2H4c-1.1 0-2-.9-2-2v-4h18zM7 7H5v6h14V7h-2c0 2.21-1.79 4-4 4s-4-1.79-4-4z" fill="${color}"/></svg>`,
     area: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M19 12h-2v3h-3v2h5v-5zM7 9h3V7H5v5h2V9zm14-6H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z" fill="${color}"/></svg>`,
-    arrow: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" fill="${color}"/></svg>`
+    arrow: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" fill="${color}"/></svg>`,
+    kitchen: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M18 2.01L6 2c-1.1 0-2 .89-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.11-.9-1.99-2-1.99zM18 20H6v-9.02h12V20zm0-11H6V4h12v5zM8 5h2v3H8zm0 7h2v5H8z" fill="${color}"/></svg>`,
+    car: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" fill="${color}"/></svg>`,
+    house: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="${color}"/></svg>`,
+    globe: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" fill="${color}"/></svg>`,
+    pool: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M22 21c-1.11 0-1.73-.37-2.18-.64-.37-.22-.6-.36-1.15-.36-.56 0-.78.13-1.15.36-.46.27-1.07.64-2.18.64s-1.73-.37-2.18-.64c-.37-.22-.6-.36-1.15-.36-.56 0-.78.13-1.15.36-.46.27-1.08.64-2.19.64-1.11 0-1.73-.37-2.18-.64-.37-.23-.6-.36-1.15-.36s-.78.13-1.15.36c-.46.27-1.08.64-2.19.64v-2c.56 0 .78-.13 1.15-.36.46-.27 1.08-.64 2.19-.64s1.73.37 2.18.64c.37.23.59.36 1.15.36.56 0 .78-.13 1.15-.36.46-.27 1.08-.64 2.19-.64 1.11 0 1.73.37 2.18.64.37.22.6.36 1.15.36s.78-.13 1.15-.36c.45-.27 1.07-.64 2.18-.64s1.73.37 2.18.64c.37.23.59.36 1.15.36v2zM8.67 12c.56 0 .78-.13 1.15-.36.46-.27 1.08-.64 2.19-.64 1.11 0 1.73.37 2.18.64.37.22.6.36 1.15.36l1.76-6h2.8L17 14c-1.11 0-1.73-.37-2.18-.64-.37-.22-.6-.36-1.15-.36s-.78.13-1.15.36c-.46.27-1.08.64-2.19.64-1.11 0-1.73-.37-2.18-.64-.37-.23-.59-.36-1.15-.36l2.82-8h2.8L8.67 12zM16 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="${color}"/></svg>`
   };
   return icons[name] || '';
+}
+
+// ============================================================
+// FEATURE ICON DETECTION
+// ============================================================
+
+function detectFeatureIcon(text) {
+  const lower = (text || '').toLowerCase();
+  if (/bed|bedroom|habitaci|dormitor|recamar/i.test(lower)) return 'bed';
+  if (/bath|bathroom|baño|aseo|wc/i.test(lower)) return 'bath';
+  if (/kitchen|cocina|cozinha/i.test(lower)) return 'kitchen';
+  if (/park|garage|carport|estaciona|garaje|cochera/i.test(lower)) return 'car';
+  if (/pool|piscina|alberca/i.test(lower)) return 'pool';
+  if (/view|vista|ocean|mar|lago|panoram/i.test(lower)) return 'globe';
+  if (/area|m²|sq\s*ft|superficie|terreno/i.test(lower)) return 'area';
+  return 'check';
 }
 
 // ============================================================
@@ -201,6 +295,12 @@ function buildPhotoSlots(photos, count) {
   return result;
 }
 
+/** Wrap a photo img tag with border-radius and overflow hidden */
+function photoImg(src, colors, extraStyle) {
+  const radius = colors.photoRadius || '0px';
+  return `<div style="overflow:hidden;border-radius:${radius};height:100%;${extraStyle || ''}"><img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous"/></div>`;
+}
+
 function getPostTypeBadge(postType, labels) {
   const badges = {
     'new-listing': labels.newListing,
@@ -212,184 +312,296 @@ function getPostTypeBadge(postType, labels) {
   return badges[postType] || '';
 }
 
-function buildBadge(postType, colors, property, openHouse, labels) {
+function buildBadge(postType, colors, property, openHouse, labels, fs) {
   const label = getPostTypeBadge(postType, labels);
   if (!label) return '';
+  const badgeFontSize = fs ? fs.badge : '18px';
 
   let extra = '';
   if (postType === 'price-drop' && property.oldPrice) {
-    extra = `<div style="font-family:'Montserrat',sans-serif;font-size:14px;margin-top:6px;">
+    extra = `<div style="font-family:'Montserrat',sans-serif;font-size:16px;margin-top:6px;">
       <span style="text-decoration:line-through;color:${colors.textSecondary};margin-right:8px;">${escapeHtml(property.oldPrice)}</span>
       <span style="color:${colors.accent};font-weight:700;">${escapeHtml(property.price)}</span>
     </div>`;
   }
   if (postType === 'open-house' && openHouse) {
-    extra = `<div style="font-family:'Montserrat',sans-serif;font-size:15px;margin-top:4px;color:${colors.text};">
+    extra = `<div style="font-family:'Montserrat',sans-serif;font-size:16px;margin-top:6px;color:${colors.text};">
       ${openHouse.date ? escapeHtml(openHouse.date) : ''}${openHouse.date && openHouse.time ? ' · ' : ''}${openHouse.time ? escapeHtml(openHouse.time) : ''}
     </div>`;
   }
 
   if (postType === 'just-sold') {
-    return `<div style="position:absolute;top:20px;right:20px;z-index:10;">
-      <div style="background:${colors.badge};color:${colors.badgeText};font-family:'Montserrat',sans-serif;font-weight:800;font-size:22px;padding:10px 24px;letter-spacing:3px;transform:rotate(3deg);border:3px solid ${colors.badgeText};box-shadow:0 4px 20px rgba(0,0,0,0.3);">${escapeHtml(label)}</div>
+    return `<div style="position:absolute;top:24px;right:24px;z-index:10;">
+      <div style="background:${colors.badge};color:${colors.badgeText};font-family:'Montserrat',sans-serif;font-weight:900;font-size:24px;padding:12px 28px;letter-spacing:3px;transform:rotate(3deg);border:3px solid ${colors.badgeText};box-shadow:0 6px 24px rgba(0,0,0,0.35);border-radius:4px;">${escapeHtml(label)}</div>
       ${extra}
     </div>`;
   }
 
-  return `<div style="position:absolute;top:20px;left:20px;z-index:10;">
-    <div style="background:${colors.badge};color:${colors.badgeText};font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;padding:10px 24px;letter-spacing:2.5px;box-shadow:0 2px 10px rgba(0,0,0,0.2);">${escapeHtml(label)}</div>
+  return `<div style="position:absolute;top:24px;left:24px;z-index:10;">
+    <div style="background:${colors.badge};color:${colors.badgeText};font-family:'Montserrat',sans-serif;font-weight:800;font-size:${badgeFontSize};padding:10px 24px;letter-spacing:2.5px;box-shadow:0 4px 16px rgba(0,0,0,0.25);border-radius:4px;">${escapeHtml(label)}</div>
     ${extra}
   </div>`;
 }
 
-function buildInlineBadge(postType, colors, labels) {
+function buildInlineBadge(postType, colors, labels, fs) {
   const label = getPostTypeBadge(postType, labels);
   if (!label) return '';
-  return `<span style="display:inline-block;background:${colors.badge};color:${colors.badgeText};font-family:'Montserrat',sans-serif;font-weight:700;font-size:14px;padding:8px 18px;letter-spacing:2.5px;margin-right:12px;vertical-align:middle;">${escapeHtml(label)}</span>`;
+  const badgeFontSize = fs ? fs.badge : '18px';
+  return `<span style="display:inline-block;background:${colors.badge};color:${colors.badgeText};font-family:'Montserrat',sans-serif;font-weight:800;font-size:${badgeFontSize};padding:10px 22px;letter-spacing:2.5px;border-radius:4px;vertical-align:middle;">${escapeHtml(label)}</span>`;
 }
 
 function buildSectionHeader(text, colors, fontSize) {
   if (!text) return '';
-  return `<div style="font-family:'Raleway','Montserrat',sans-serif;font-weight:800;font-size:${fontSize || '15px'};letter-spacing:3px;color:${colors.accent};text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
-    <span style="display:inline-block;width:30px;height:3px;background:${colors.accent};"></span>
+  return `<div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:${fontSize || '16px'};letter-spacing:3px;color:${colors.accent};text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+    <span style="display:inline-block;width:40px;height:4px;background:${colors.accent};border-radius:2px;"></span>
     ${escapeHtml(text)}
   </div>`;
 }
 
 function buildLocationHtml(location, colors, fontSize) {
   if (!location) return '';
-  const fs = parseInt(fontSize) || 16;
-  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-    ${svgIcon('pin', colors.accent, fs + 2)}
-    <span style="font-family:'Montserrat',sans-serif;font-size:${fs}px;color:${colors.textSecondary};letter-spacing:1.5px;text-transform:uppercase;">${escapeHtml(location)}</span>
+  const sz = parseInt(fontSize) || 18;
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    ${svgIcon('pin', colors.accent, sz + 4)}
+    <span style="font-family:'Montserrat',sans-serif;font-size:${sz}px;color:${colors.textSecondary};letter-spacing:1.5px;text-transform:uppercase;font-weight:500;">${escapeHtml(location)}</span>
+  </div>`;
+}
+
+function buildTitleHtml(title, colors, fs, style) {
+  style = style || 'standard';
+  const font = colors.titleFont || 'Montserrat';
+  const isSerif = font === 'Playfair Display';
+
+  if (style === 'split') {
+    // Reference 2 style: first words smaller, last word ENORMOUS
+    const words = (title || '').split(' ');
+    if (words.length <= 1) {
+      return `<div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:900;font-size:${fs.title};color:${colors.text};line-height:1.0;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;">${escapeHtml(truncate(title, 20))}</div>`;
+    }
+    const lastWord = words.pop();
+    const firstPart = words.join(' ');
+    return `<div style="margin-bottom:16px;">
+      <div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:700;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.05;text-transform:uppercase;letter-spacing:2px;">${escapeHtml(truncate(firstPart, 30))}</div>
+      <div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:900;font-size:${fs.title};color:${colors.text};line-height:1.0;text-transform:uppercase;letter-spacing:3px;">${escapeHtml(truncate(lastWord, 18))}</div>
+    </div>`;
+  }
+
+  // 'standard' — large clean title
+  return `<div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.title};color:${colors.text};line-height:1.1;margin-bottom:14px;">${escapeHtml(truncate(title, 50))}</div>`;
+}
+
+function buildBrandingHtml(colors, fs) {
+  const agent = agentConfig;
+  return `<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+    ${agent.logo
+      ? `<img src="${agent.logo}" style="height:48px;width:48px;object-fit:cover;border-radius:10px;border:2px solid ${colors.accent};" crossorigin="anonymous" onerror="this.style.display='none'"/>`
+      : `<div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:${colors.accentLight};border-radius:10px;border:2px solid ${colors.accent};">${svgIcon('house', colors.accent, 28)}</div>`
+    }
+    <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:${fs ? fs.contactName : '18px'};color:${colors.text};letter-spacing:1.5px;text-transform:uppercase;">${escapeHtml(agent.name)}</div>
   </div>`;
 }
 
 function buildPriceHtml(property, postType, colors, fontSize, style) {
-  fontSize = fontSize || '28px';
+  fontSize = fontSize || '44px';
   style = style || 'banner';
 
   if (postType === 'price-drop') {
-    return `<div style="font-family:'Montserrat',sans-serif;margin-bottom:8px;">
-      ${property.oldPrice ? `<span style="text-decoration:line-through;color:${colors.textSecondary};font-size:${parseInt(fontSize) - 6}px;margin-right:10px;">${escapeHtml(property.oldPrice)}</span>` : ''}
-      ${property.price ? `<span style="font-weight:800;font-size:${fontSize};color:${colors.accent};letter-spacing:1px;">${escapeHtml(property.price)}</span>` : ''}
+    return `<div style="font-family:'Montserrat',sans-serif;margin-bottom:12px;">
+      ${property.oldPrice ? `<span style="text-decoration:line-through;color:${colors.textSecondary};font-size:${parseInt(fontSize) * 0.7}px;margin-right:12px;">${escapeHtml(property.oldPrice)}</span>` : ''}
+      ${property.price ? `<span style="font-weight:900;font-size:${fontSize};color:${colors.accent};letter-spacing:1px;">${escapeHtml(property.price)}</span>` : ''}
     </div>`;
   }
   if (!property.price) return '';
 
   if (style === 'banner') {
-    return `<div style="display:inline-block;background:${colors.accent};padding:8px 20px;margin-bottom:10px;">
-      <span style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:${fontSize};color:${colors.badgeText};letter-spacing:1px;">${escapeHtml(property.price)}</span>
+    return `<div style="display:inline-block;background:${colors.accent};padding:12px 28px;margin-bottom:14px;border-radius:4px;">
+      <span style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:${fontSize};color:${colors.badgeText};letter-spacing:1.5px;">${escapeHtml(property.price)}</span>
+    </div>`;
+  }
+
+  if (style === 'overlap') {
+    return `<div style="display:inline-block;background:${colors.panelSolid};padding:14px 32px;border-radius:6px;box-shadow:0 6px 24px rgba(0,0,0,0.2);">
+      <span style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:${fontSize};color:${colors.panelSolidText};letter-spacing:1.5px;">${escapeHtml(property.price)}</span>
+    </div>`;
+  }
+
+  if (style === 'boxed') {
+    return `<div style="display:inline-block;border:3px solid ${colors.text};padding:12px 28px;margin-bottom:14px;">
+      <span style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:${fontSize};color:${colors.text};letter-spacing:1.5px;">${escapeHtml(property.price)}</span>
     </div>`;
   }
 
   if (style === 'highlight') {
-    return `<div style="display:inline-block;background:${colors.accentLight};border-left:3px solid ${colors.accent};padding:6px 16px;margin-bottom:10px;">
-      <span style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:${fontSize};color:${colors.accent};letter-spacing:1px;">${escapeHtml(property.price)}</span>
+    return `<div style="display:inline-block;background:${colors.accentLight};border-left:4px solid ${colors.accent};padding:10px 20px;margin-bottom:14px;">
+      <span style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:${fontSize};color:${colors.accent};letter-spacing:1px;">${escapeHtml(property.price)}</span>
     </div>`;
   }
 
   // 'inline' style
-  return `<div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:${fontSize};color:${colors.accent};letter-spacing:1px;margin-bottom:8px;">${escapeHtml(property.price)}</div>`;
+  return `<div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:${fontSize};color:${colors.accent};letter-spacing:1px;margin-bottom:12px;">${escapeHtml(property.price)}</div>`;
 }
 
-function buildPropertyStats(property, colors, isCompact, labels) {
+function buildPropertyStats(property, colors, fs, labels, expanded) {
   const stats = [];
-  if (property.bedrooms) stats.push({ icon: 'bed', value: property.bedrooms, label: labels.bedrooms });
-  if (property.bathrooms) stats.push({ icon: 'bath', value: property.bathrooms, label: labels.bathrooms });
+  if (property.bedrooms) stats.push({ icon: 'bed', value: property.bedrooms, label: expanded ? labels.bedroomsFull : labels.bedrooms });
+  if (property.bathrooms) stats.push({ icon: 'bath', value: property.bathrooms, label: expanded ? labels.bathroomsFull : labels.bathrooms });
   if (property.area) stats.push({ icon: 'area', value: property.area, label: '' });
   if (stats.length === 0) return '';
 
-  const iconSize = isCompact ? 20 : 24;
-  const fontSize = isCompact ? '16px' : '18px';
-  const labelSize = isCompact ? '13px' : '14px';
-  const gap = isCompact ? '20px' : '28px';
+  const iconSize = fs ? parseInt(fs.statsValue) : 28;
+  const valueSize = fs ? fs.statsValue : '28px';
+  const labelSize = fs ? fs.statsLabel : '14px';
 
   const items = stats.map(s =>
-    `<div style="display:flex;align-items:center;gap:8px;">
+    `<div style="display:flex;align-items:center;gap:10px;">
       ${svgIcon(s.icon, colors.accent, iconSize)}
-      <span style="font-family:'Montserrat',sans-serif;font-weight:600;font-size:${fontSize};color:${colors.text};">${escapeHtml(String(s.value))}</span>
-      ${s.label ? `<span style="font-family:'Montserrat',sans-serif;font-size:${labelSize};color:${colors.textSecondary};letter-spacing:1px;">${escapeHtml(s.label)}</span>` : ''}
+      <span style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:${valueSize};color:${colors.text};">${escapeHtml(String(s.value))}</span>
+      ${s.label ? `<span style="font-family:'Montserrat',sans-serif;font-size:${labelSize};color:${colors.textSecondary};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(s.label)}</span>` : ''}
     </div>`
   ).join('');
 
-  return `<div style="display:flex;align-items:center;gap:${gap};margin:10px 0;">${items}</div>`;
+  return `<div style="display:flex;align-items:center;gap:32px;margin:14px 0;">${items}</div>`;
 }
 
-function buildFeaturesHtml(features, colors, labels, maxItems) {
+function buildFeaturesHtml(features, colors, labels, maxItems, mode, fs) {
   if (!features || features.length === 0) return '';
   const items = features.slice(0, maxItems || 6);
+  mode = mode || 'vertical';
+  const featureSize = fs ? fs.feature : '20px';
+  const iconSize = parseInt(featureSize) + 4;
 
   const header = labels.features
-    ? buildSectionHeader(labels.features, colors, '14px')
+    ? buildSectionHeader(labels.features, colors, fs ? fs.sectionHeader : '16px')
     : '';
 
-  const list = items.map(f =>
-    `<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
-      ${svgIcon('check', colors.accent, 20)}
-      <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.text};line-height:1.4;">${escapeHtml(f)}</span>
-    </div>`
-  ).join('');
+  if (mode === 'grid') {
+    const gridItems = items.map(f => {
+      const icon = detectFeatureIcon(f);
+      return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        ${svgIcon(icon, colors.accent, iconSize)}
+        <span style="font-family:'Montserrat',sans-serif;font-size:${featureSize};font-weight:500;color:${colors.text};line-height:1.3;">${escapeHtml(f)}</span>
+      </div>`;
+    }).join('');
+    return `<div style="margin-top:12px;">${header}<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;">${gridItems}</div></div>`;
+  }
 
-  return `<div style="margin-top:10px;">${header}${list}</div>`;
+  if (mode === 'horizontal') {
+    const hItems = items.map(f => {
+      const icon = detectFeatureIcon(f);
+      return `<div style="display:flex;align-items:center;gap:8px;">
+        ${svgIcon(icon, colors.accent, parseInt(featureSize))}
+        <span style="font-family:'Montserrat',sans-serif;font-size:${featureSize};font-weight:500;color:${colors.text};">${escapeHtml(f)}</span>
+      </div>`;
+    }).join('');
+    return `<div style="display:flex;flex-wrap:wrap;gap:16px;margin:10px 0;">${hItems}</div>`;
+  }
+
+  // 'vertical' mode (default)
+  const list = items.map(f => {
+    const icon = detectFeatureIcon(f);
+    return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+      ${svgIcon(icon, colors.accent, iconSize)}
+      <span style="font-family:'Montserrat',sans-serif;font-size:${featureSize};font-weight:500;color:${colors.text};line-height:1.3;">${escapeHtml(f)}</span>
+    </div>`;
+  }).join('');
+
+  return `<div style="margin-top:12px;">${header}${list}</div>`;
 }
 
-function buildContactSection(colors, size, labels, style) {
+function buildContactSection(colors, size, labels, style, fs) {
   const agent = agentConfig;
-  const isStory = size === 'instagram-story';
   const isFB = size === 'facebook-post';
+  const nameSize = fs ? fs.contactName : '18px';
+  const infoSize = fs ? fs.contactInfo : '16px';
 
-  if (style === 'panel') {
-    // Embedded contact section (used inside info panels)
-    const ctaHeader = labels.contact
-      ? `<div style="font-family:'Raleway','Montserrat',sans-serif;font-weight:800;font-size:14px;letter-spacing:3px;color:${colors.accent};text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
-          <span style="display:inline-block;width:30px;height:3px;background:${colors.accent};"></span>
-          ${escapeHtml(labels.contact)}
-        </div>`
-      : '';
+  if (style === 'solidPanel') {
+    // Solid colored contact box (Reference 1 orange box)
+    return `<div style="background:${colors.panelSolid};border-radius:${colors.photoRadius || '8px'};padding:24px 28px;margin-top:14px;">
+      <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:${nameSize};letter-spacing:2px;color:${colors.panelSolidText};text-transform:uppercase;margin-bottom:14px;">${escapeHtml(labels.contact)}</div>
+      ${agent.phone ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        ${svgIcon('phone', colors.panelSolidText, 20)}
+        <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.panelSolidText};font-weight:500;">${escapeHtml(agent.phone)}</span>
+      </div>` : ''}
+      ${agent.email ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        ${svgIcon('email', colors.panelSolidText, 20)}
+        <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.panelSolidText};font-weight:500;">${escapeHtml(agent.email)}</span>
+      </div>` : ''}
+      ${agent.website ? `<div style="display:flex;align-items:center;gap:10px;">
+        ${svgIcon('globe', colors.panelSolidText, 20)}
+        <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.panelSolidText};font-weight:500;">${escapeHtml(agent.website)}</span>
+      </div>` : ''}
+    </div>`;
+  }
 
-    return `<div style="margin-top:14px;">
-      ${ctaHeader}
-      ${agent.phone ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
-        ${svgIcon('phone', colors.accent, 20)}
-        <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.text};">${escapeHtml(agent.phone)}</span>
-      </div>` : ''}
-      ${agent.email ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
-        ${svgIcon('email', colors.accent, 20)}
-        <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.text};">${escapeHtml(agent.email)}</span>
-      </div>` : ''}
-      <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
-        ${agent.logo ? `<img src="${agent.logo}" style="height:40px;width:40px;object-fit:cover;border-radius:50%;border:2px solid ${colors.accent};" crossorigin="anonymous" onerror="this.style.display='none'"/>` : ''}
-        <div>
-          <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:16px;color:${colors.text};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(agent.name)}</div>
-          ${agent.title ? `<div style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.textSecondary};letter-spacing:0.5px;">${escapeHtml(agent.title)}</div>` : ''}
-        </div>
+  if (style === 'solidBar') {
+    // Full-width solid colored footer bar (References 1 & 2)
+    const barHeight = isFB ? '80px' : '95px';
+    return `<div style="position:absolute;bottom:0;left:0;right:0;height:${barHeight};background:${colors.footerBg};display:flex;align-items:center;padding:0 40px;gap:24px;">
+      ${agent.logo
+        ? `<img src="${agent.logo}" style="height:44px;width:44px;object-fit:cover;border-radius:50%;border:2px solid ${colors.footerText};" crossorigin="anonymous" onerror="this.style.display='none'"/>`
+        : `<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.15);border-radius:50%;">${svgIcon('house', colors.footerText, 24)}</div>`
+      }
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:${nameSize};color:${colors.footerText};letter-spacing:1.5px;text-transform:uppercase;">${escapeHtml(agent.name)}</div>
+      </div>
+      <div style="display:flex;gap:28px;align-items:center;">
+        ${agent.phone ? `<div style="display:flex;align-items:center;gap:8px;">
+          ${svgIcon('phone', colors.footerText, 18)}
+          <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.footerText};font-weight:500;">${escapeHtml(agent.phone)}</span>
+        </div>` : ''}
+        ${agent.email ? `<div style="display:flex;align-items:center;gap:8px;">
+          ${svgIcon('email', colors.footerText, 18)}
+          <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.footerText};font-weight:500;">${escapeHtml(agent.email)}</span>
+        </div>` : ''}
       </div>
     </div>`;
   }
 
-  // 'bar' style — bottom-anchored enhanced bar
-  const barHeight = isFB ? '85px' : '95px';
-  const nameSize = isFB ? '14px' : '16px';
-  const infoSize = isFB ? '13px' : '14px';
+  if (style === 'panel') {
+    // Embedded contact section (inside info panels, uses theme text colors)
+    const ctaHeader = labels.contact
+      ? buildSectionHeader(labels.contact, colors, fs ? fs.sectionHeader : '16px')
+      : '';
+    return `<div style="margin-top:16px;">
+      ${ctaHeader}
+      ${agent.phone ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        ${svgIcon('phone', colors.accent, 22)}
+        <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.text};font-weight:500;">${escapeHtml(agent.phone)}</span>
+      </div>` : ''}
+      ${agent.email ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        ${svgIcon('email', colors.accent, 22)}
+        <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.text};font-weight:500;">${escapeHtml(agent.email)}</span>
+      </div>` : ''}
+      <div style="display:flex;align-items:center;gap:14px;margin-top:12px;">
+        ${agent.logo
+          ? `<img src="${agent.logo}" style="height:42px;width:42px;object-fit:cover;border-radius:50%;border:2px solid ${colors.accent};" crossorigin="anonymous" onerror="this.style.display='none'"/>`
+          : `<div style="width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:${colors.accentLight};border-radius:50%;">${svgIcon('house', colors.accent, 22)}</div>`
+        }
+        <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:${nameSize};color:${colors.text};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(agent.name)}</div>
+      </div>
+    </div>`;
+  }
 
-  return `<div style="position:absolute;bottom:0;left:0;right:0;height:${barHeight};background:${colors.bgSecondary};display:flex;align-items:center;padding:0 32px;gap:18px;border-top:3px solid ${colors.accent};">
-    ${agent.logo ? `<img src="${agent.logo}" style="height:48px;width:48px;object-fit:cover;border-radius:50%;border:2px solid ${colors.accent};" crossorigin="anonymous" onerror="this.style.display='none'"/>` : ''}
+  // 'bar' style — bottom-anchored bar with bgSecondary (subtle)
+  const barHeight = isFB ? '80px' : '95px';
+  return `<div style="position:absolute;bottom:0;left:0;right:0;height:${barHeight};background:${colors.bgSecondary};display:flex;align-items:center;padding:0 36px;gap:18px;border-top:3px solid ${colors.accent};">
+    ${agent.logo
+      ? `<img src="${agent.logo}" style="height:44px;width:44px;object-fit:cover;border-radius:50%;border:2px solid ${colors.accent};" crossorigin="anonymous" onerror="this.style.display='none'"/>`
+      : `<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:${colors.accentLight};border-radius:50%;">${svgIcon('house', colors.accent, 22)}</div>`
+    }
     <div style="flex:1;min-width:0;">
       <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:${nameSize};color:${colors.text};letter-spacing:1.5px;text-transform:uppercase;">${escapeHtml(agent.name)}</div>
-      ${agent.title ? `<div style="font-family:'Montserrat',sans-serif;font-size:${isFB ? '12px' : '13px'};color:${colors.textSecondary};margin-top:2px;">${escapeHtml(agent.title)}</div>` : ''}
     </div>
-    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
+    <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
       ${agent.phone ? `<div style="display:flex;align-items:center;gap:8px;">
         ${svgIcon('phone', colors.accent, 16)}
-        <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.textSecondary};">${escapeHtml(agent.phone)}</span>
+        <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.textSecondary};font-weight:500;">${escapeHtml(agent.phone)}</span>
       </div>` : ''}
       ${agent.email ? `<div style="display:flex;align-items:center;gap:8px;">
         ${svgIcon('email', colors.accent, 16)}
-        <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.textSecondary};">${escapeHtml(agent.email)}</span>
+        <span style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.textSecondary};font-weight:500;">${escapeHtml(agent.email)}</span>
       </div>` : ''}
     </div>
-    ${agent.website ? `<div style="font-family:'Montserrat',sans-serif;font-size:${infoSize};color:${colors.accent};text-align:right;">${escapeHtml(agent.website)}</div>` : ''}
   </div>`;
 }
 
@@ -402,54 +614,56 @@ function renderHeroSingle(property, colors, size, postType, openHouse, labels) {
   const photos = buildPhotoSlots(property.photos, 1);
   const isStory = size === 'instagram-story';
   const isFB = size === 'facebook-post';
+  const fs = getFontScale(size);
+  const gap = colors.photoGap || '0px';
+  const radius = colors.photoRadius || '0px';
+  const hasRadius = parseInt(radius) > 0;
 
-  // For all sizes: full-bleed photo background + info panel overlay
-  // Square/FB: info panel on the left ~42%
-  // Story: info panel at bottom ~48%
   if (isStory) {
     return `
       <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
-        <img src="${photos[0]}" style="width:100%;height:55%;object-fit:cover;position:absolute;top:0;left:0;" crossorigin="anonymous"/>
-        <div style="position:absolute;top:0;left:0;right:0;height:55%;background:linear-gradient(to top, ${colors.bg} 0%, transparent 50%);"></div>
-        ${buildBadge(postType, colors, property, openHouse, labels)}
-        <!-- Info panel bottom -->
-        <div style="position:absolute;bottom:0;left:0;right:0;top:52%;background:${colors.bg};padding:30px 40px 40px;display:flex;flex-direction:column;justify-content:center;">
-          <div style="width:50px;height:3px;background:${colors.accent};margin-bottom:16px;"></div>
-          ${buildPriceHtml(property, postType, colors, '34px', 'banner')}
-          <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:36px;color:${colors.text};line-height:1.15;margin-bottom:10px;">${escapeHtml(truncate(property.title, 55))}</div>
-          ${buildLocationHtml(property.location, colors, '14px')}
-          ${buildPropertyStats(property, colors, false, labels)}
-          ${buildFeaturesHtml(property.features, colors, labels, 5)}
-          ${buildContactSection(colors, size, labels, 'panel')}
+        <!-- Photo top -->
+        <div style="position:absolute;top:${hasRadius ? '16px' : '0'};left:${hasRadius ? '16px' : '0'};right:${hasRadius ? '16px' : '0'};height:${hasRadius ? '44%' : '45%'};overflow:hidden;border-radius:${hasRadius ? radius : '0'};">
+          <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/>
         </div>
+        ${buildBadge(postType, colors, property, openHouse, labels, fs)}
+        <!-- Price overlap -->
+        <div style="position:absolute;top:43%;left:40px;z-index:5;">
+          ${buildPriceHtml(property, postType, colors, fs.price, 'overlap')}
+        </div>
+        <!-- Info panel bottom -->
+        <div style="position:absolute;bottom:95px;left:0;right:0;top:48%;padding:20px 44px;display:flex;flex-direction:column;justify-content:center;">
+          ${buildTitleHtml(property.title, colors, fs, 'standard')}
+          ${buildLocationHtml(property.location, colors, fs.location)}
+          ${buildPropertyStats(property, colors, fs, labels, true)}
+          ${buildFeaturesHtml(property.features, colors, labels, 5, 'vertical', fs)}
+        </div>
+        ${buildContactSection(colors, size, labels, 'solidBar', fs)}
       </div>`;
   }
 
-  // Square (instagram-post) and Facebook
-  const panelWidth = isFB ? '44%' : '46%';
-  const titleSize = isFB ? '28px' : '36px';
-  const priceSize = isFB ? '26px' : '32px';
+  // Square and Facebook
+  const panelW = isFB ? '46%' : '48%';
+  const photoW = isFB ? '54%' : '52%';
 
   return `
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
-      <!-- Photo right side -->
-      <div style="position:absolute;top:0;right:0;bottom:0;width:${isFB ? '58%' : '56%'};overflow:hidden;">
+      <!-- Photo right -->
+      <div style="position:absolute;top:${hasRadius ? gap : '0'};right:${hasRadius ? gap : '0'};bottom:${hasRadius ? gap : '0'};width:${photoW};overflow:hidden;border-radius:${hasRadius ? radius : '0'};">
         <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/>
       </div>
-      <!-- Info panel left side -->
-      <div style="position:absolute;top:0;left:0;bottom:0;width:${panelWidth};background:${colors.bg};padding:${isFB ? '24px 28px' : '36px 36px'};display:flex;flex-direction:column;justify-content:center;z-index:2;">
-        ${postType !== 'just-sold' ? `<div style="margin-bottom:12px;">${buildInlineBadge(postType, colors, labels)}</div>` : ''}
-        <div style="width:40px;height:3px;background:${colors.accent};margin-bottom:14px;"></div>
-        ${buildPriceHtml(property, postType, colors, priceSize, 'banner')}
-        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${titleSize};color:${colors.text};line-height:1.15;margin-bottom:10px;">${escapeHtml(truncate(property.title, 50))}</div>
-        ${buildLocationHtml(property.location, colors, isFB ? '14' : '16')}
-        ${buildPropertyStats(property, colors, isFB, labels)}
-        ${buildFeaturesHtml(property.features, colors, labels, isFB ? 3 : 4)}
-        ${buildContactSection(colors, size, labels, 'panel')}
+      ${postType === 'just-sold' ? buildBadge(postType, colors, property, openHouse, labels, fs) : ''}
+      <!-- Info panel left -->
+      <div style="position:absolute;top:0;left:0;bottom:0;width:${panelW};padding:${isFB ? '28px 32px' : '40px 44px'};display:flex;flex-direction:column;justify-content:center;z-index:2;">
+        ${buildBrandingHtml(colors, fs)}
+        ${postType !== 'just-sold' ? `<div style="margin-bottom:14px;">${buildInlineBadge(postType, colors, labels, fs)}</div>` : ''}
+        ${buildPriceHtml(property, postType, colors, fs.price, 'banner')}
+        ${buildTitleHtml(property.title, colors, fs, 'standard')}
+        ${buildLocationHtml(property.location, colors, fs.location)}
+        ${buildPropertyStats(property, colors, fs, labels, false)}
+        ${buildFeaturesHtml(property.features, colors, labels, isFB ? 3 : 4, 'vertical', fs)}
+        ${buildContactSection(colors, size, labels, 'panel', fs)}
       </div>
-      ${postType === 'just-sold' ? buildBadge(postType, colors, property, openHouse, labels) : ''}
-      <!-- Accent stripe between panel and photo -->
-      <div style="position:absolute;top:0;bottom:0;left:${panelWidth};width:4px;background:${colors.accent};z-index:3;"></div>
     </div>`;
 }
 
@@ -458,59 +672,61 @@ function renderSplitDuo(property, colors, size, postType, openHouse, labels) {
   const photos = buildPhotoSlots(property.photos, 2);
   const isStory = size === 'instagram-story';
   const isFB = size === 'facebook-post';
+  const fs = getFontScale(size);
+  const gap = colors.photoGap || '0px';
+  const radius = colors.photoRadius || '0px';
+  const hasRadius = parseInt(radius) > 0;
 
   if (isStory) {
-    // Story: info panel top ~35%, two photos stacked below
     return `
       <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
-        <!-- Info panel top -->
-        <div style="padding:36px 40px;height:38%;display:flex;flex-direction:column;justify-content:center;background:${colors.bg};">
-          ${buildInlineBadge(postType, colors, labels)}
-          <div style="width:40px;height:3px;background:${colors.accent};margin:12px 0;"></div>
-          ${buildPriceHtml(property, postType, colors, '32px', 'banner')}
-          <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:34px;color:${colors.text};line-height:1.15;margin-bottom:8px;">${escapeHtml(truncate(property.title, 50))}</div>
-          ${buildLocationHtml(property.location, colors, '14px')}
-          ${buildPropertyStats(property, colors, false, labels)}
+        <!-- Top: branding + title -->
+        <div style="padding:40px 44px 20px;">
+          ${buildBrandingHtml(colors, fs)}
+          ${buildInlineBadge(postType, colors, labels, fs)}
+          ${buildTitleHtml(property.title, colors, fs, 'split')}
         </div>
-        <!-- Accent divider -->
-        <div style="height:4px;background:${colors.accent};"></div>
-        <!-- Two photos stacked -->
-        <div style="display:flex;flex-direction:column;gap:4px;flex:1;height:62%;">
-          <div style="flex:1;overflow:hidden;"><img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
-          <div style="flex:1;overflow:hidden;"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+        <!-- Two photos side by side -->
+        <div style="display:flex;gap:${gap};padding:0 ${hasRadius ? '16px' : '0'};height:40%;">
+          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
         </div>
-        <!-- Features + Contact overlay at bottom -->
-        <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top, ${colors.bg} 0%, ${colors.bg}ee 70%, transparent 100%);padding:20px 40px 30px;">
-          ${buildFeaturesHtml(property.features, colors, labels, 4)}
-          ${buildContactSection(colors, size, labels, 'panel')}
+        <!-- Price overlap -->
+        <div style="position:relative;z-index:5;margin-top:-30px;margin-left:44px;">
+          ${buildPriceHtml(property, postType, colors, fs.price, 'overlap')}
         </div>
+        <!-- Bottom info -->
+        <div style="padding:16px 44px;flex:1;">
+          ${buildLocationHtml(property.location, colors, fs.location)}
+          ${buildPropertyStats(property, colors, fs, labels, true)}
+          ${buildFeaturesHtml(property.features, colors, labels, 4, 'grid', fs)}
+        </div>
+        ${buildContactSection(colors, size, labels, 'solidBar', fs)}
       </div>`;
   }
 
-  // Square and Facebook: info panel left ~42%, two photos stacked right ~58%
-  const panelWidth = isFB ? '40%' : '44%';
-  const photoWidth = isFB ? '60%' : '56%';
+  // Square and Facebook — cream/white background with photos + info
+  const photoAreaW = isFB ? '55%' : '52%';
 
   return `
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
-      <!-- Info panel left -->
-      <div style="position:absolute;top:0;left:0;bottom:0;width:${panelWidth};background:${colors.bg};padding:${isFB ? '24px 28px' : '34px 36px'};display:flex;flex-direction:column;justify-content:center;z-index:2;">
-        ${buildInlineBadge(postType, colors, labels)}
-        <div style="width:40px;height:3px;background:${colors.accent};margin:12px 0;"></div>
-        ${buildPriceHtml(property, postType, colors, isFB ? '26px' : '30px', 'banner')}
-        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '26px' : '32px'};color:${colors.text};line-height:1.15;margin-bottom:10px;">${escapeHtml(truncate(property.title, 45))}</div>
-        ${buildLocationHtml(property.location, colors, isFB ? '13' : '15')}
-        ${buildPropertyStats(property, colors, isFB, labels)}
-        ${buildFeaturesHtml(property.features, colors, labels, isFB ? 3 : 5)}
-        ${buildContactSection(colors, size, labels, 'panel')}
+      <!-- Left: info panel -->
+      <div style="position:absolute;top:0;left:0;bottom:${hasRadius ? '95px' : '95px'};width:${isFB ? '45%' : '48%'};padding:${isFB ? '28px 28px' : '36px 40px'};display:flex;flex-direction:column;justify-content:center;">
+        ${buildBrandingHtml(colors, fs)}
+        ${buildInlineBadge(postType, colors, labels, fs)}
+        <div style="margin-top:14px;">
+          ${buildTitleHtml(property.title, colors, fs, 'split')}
+        </div>
+        ${buildLocationHtml(property.location, colors, fs.location)}
+        ${buildPropertyStats(property, colors, fs, labels, false)}
+        ${buildFeaturesHtml(property.features, colors, labels, isFB ? 3 : 4, 'vertical', fs)}
       </div>
-      <!-- Accent stripe -->
-      <div style="position:absolute;top:0;bottom:0;left:${panelWidth};width:4px;background:${colors.accent};z-index:3;"></div>
-      <!-- Two photos stacked right -->
-      <div style="position:absolute;top:0;right:0;bottom:0;width:${photoWidth};display:flex;flex-direction:column;gap:4px;">
-        <div style="flex:1;overflow:hidden;"><img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
-        <div style="flex:1;overflow:hidden;"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+      <!-- Right: two photos stacked -->
+      <div style="position:absolute;top:${hasRadius ? gap : '0'};right:${hasRadius ? gap : '0'};bottom:${hasRadius ? `calc(95px + ${gap})` : '95px'};width:${photoAreaW};display:flex;flex-direction:column;gap:${gap};">
+        <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+        <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
       </div>
+      ${buildContactSection(colors, size, labels, 'solidBar', fs)}
     </div>`;
 }
 
@@ -519,73 +735,78 @@ function renderFeatureTrio(property, colors, size, postType, openHouse, labels) 
   const photos = buildPhotoSlots(property.photos, 3);
   const isStory = size === 'instagram-story';
   const isFB = size === 'facebook-post';
+  const fs = getFontScale(size);
+  const gap = colors.photoGap || '0px';
+  const radius = colors.photoRadius || '0px';
+  const hasRadius = parseInt(radius) > 0;
+  const pad = hasRadius ? '16px' : '0';
 
   if (isStory) {
-    // Story: photos top ~52%, info panel bottom ~48%
     return `
       <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
-        ${buildBadge(postType, colors, property, openHouse, labels)}
-        <!-- L-shape photos at top -->
-        <div style="display:flex;height:52%;gap:4px;">
-          <div style="flex:1.2;overflow:hidden;"><img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
-          <div style="flex:0.8;display:flex;flex-direction:column;gap:4px;">
-            <div style="flex:1;overflow:hidden;"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
-            <div style="flex:1;overflow:hidden;"><img src="${photos[2]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+        <!-- Top: badge + title -->
+        <div style="padding:36px 44px 16px;">
+          ${buildBrandingHtml(colors, fs)}
+          ${buildInlineBadge(postType, colors, labels, fs)}
+          <div style="margin-top:12px;">${buildTitleHtml(property.title, colors, fs, 'standard')}</div>
+        </div>
+        <!-- L-shape photos -->
+        <div style="display:flex;gap:${gap};padding:0 ${pad};height:42%;">
+          <div style="flex:0.4;display:flex;flex-direction:column;gap:${gap};">
+            <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+            <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[2]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+          </div>
+          <div style="flex:0.6;overflow:hidden;border-radius:${radius};position:relative;">
+            <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/>
           </div>
         </div>
-        <!-- Accent divider -->
-        <div style="height:4px;background:${colors.accent};"></div>
-        <!-- Info panel bottom -->
-        <div style="padding:28px 36px;display:flex;flex-direction:column;justify-content:center;flex:1;">
-          <div style="width:40px;height:3px;background:${colors.accent};margin-bottom:14px;"></div>
-          ${buildPriceHtml(property, postType, colors, '30px', 'banner')}
-          <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:32px;color:${colors.text};line-height:1.15;margin-bottom:8px;">${escapeHtml(truncate(property.title, 50))}</div>
-          ${buildLocationHtml(property.location, colors, '14px')}
-          ${buildPropertyStats(property, colors, false, labels)}
-          ${buildFeaturesHtml(property.features, colors, labels, 5)}
-          ${buildContactSection(colors, size, labels, 'panel')}
+        <!-- Price overlap -->
+        <div style="position:relative;z-index:5;margin-top:-30px;margin-left:44px;">
+          ${buildPriceHtml(property, postType, colors, fs.price, 'overlap')}
         </div>
+        <!-- Bottom info -->
+        <div style="padding:16px 44px;">
+          ${buildLocationHtml(property.location, colors, fs.location)}
+          ${buildPropertyStats(property, colors, fs, labels, true)}
+          ${buildFeaturesHtml(property.features, colors, labels, 5, 'grid', fs)}
+        </div>
+        ${buildContactSection(colors, size, labels, 'solidBar', fs)}
       </div>`;
   }
 
-  // Square and Facebook: L-shape photo grid top + info bar bottom
-  const photoHeight = isFB ? '58%' : '56%';
-  const barHeight = isFB ? '85px' : '95px';
-
+  // Square and Facebook
   return `
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
-      ${buildBadge(postType, colors, property, openHouse, labels)}
+      <!-- Top: badge + title strip -->
+      <div style="padding:${isFB ? '16px 32px' : '24px 40px'};display:flex;align-items:center;gap:16px;">
+        ${buildInlineBadge(postType, colors, labels, fs)}
+        <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.1;">${escapeHtml(truncate(property.title, 40))}</div>
+      </div>
       <!-- L-shape photo grid -->
-      <div style="display:flex;height:${photoHeight};gap:4px;">
-        <div style="flex:1.2;overflow:hidden;position:relative;">
+      <div style="display:flex;gap:${gap};padding:0 ${pad};height:${isFB ? '52%' : '50%'};">
+        <div style="flex:0.38;display:flex;flex-direction:column;gap:${gap};">
+          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[2]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+        </div>
+        <div style="flex:0.62;overflow:hidden;border-radius:${radius};position:relative;">
           <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/>
-          <!-- Floating info on large photo -->
-          <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top, ${colors.bg}ee 0%, ${colors.bg}cc 60%, transparent 100%);padding:20px 24px;">
-            ${buildPriceHtml(property, postType, colors, isFB ? '26px' : '32px', 'inline')}
-            <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '24px' : '30px'};color:${colors.text};line-height:1.15;">${escapeHtml(truncate(property.title, 40))}</div>
-          </div>
-        </div>
-        <div style="flex:0.8;display:flex;flex-direction:column;gap:4px;">
-          <div style="flex:1;overflow:hidden;"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
-          <div style="flex:1;overflow:hidden;"><img src="${photos[2]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
         </div>
       </div>
-      <!-- Info section below photos -->
-      <div style="position:absolute;bottom:${parseInt(barHeight)}px;left:0;right:0;top:${photoHeight};background:${colors.bg};padding:${isFB ? '14px 28px' : '18px 36px'};display:flex;align-items:center;gap:28px;border-top:3px solid ${colors.accent};">
-        <div style="flex:1;min-width:0;">
-          ${buildLocationHtml(property.location, colors, isFB ? '14' : '16')}
-          ${buildPropertyStats(property, colors, false, labels)}
+      <!-- Price overlap -->
+      <div style="position:relative;z-index:5;margin-top:-28px;margin-left:${hasRadius ? '56%' : '50%'};margin-right:20px;text-align:right;">
+        ${buildPriceHtml(property, postType, colors, fs.price, 'overlap')}
+      </div>
+      <!-- Bottom info: two columns -->
+      <div style="position:absolute;bottom:${isFB ? '80px' : '95px'};left:0;right:0;padding:8px ${isFB ? '32px' : '40px'};display:flex;gap:24px;align-items:flex-start;">
+        <div style="flex:1;">
+          ${buildBrandingHtml(colors, fs)}
+          ${buildFeaturesHtml(property.features, colors, labels, 4, 'grid', fs)}
         </div>
-        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
-          ${property.features ? property.features.slice(0, 3).map(f =>
-            `<div style="display:flex;align-items:center;gap:8px;">
-              ${svgIcon('check', colors.accent, 18)}
-              <span style="font-family:'Montserrat',sans-serif;font-size:15px;color:${colors.text};">${escapeHtml(f)}</span>
-            </div>`
-          ).join('') : ''}
+        <div style="flex:0;min-width:${isFB ? '220px' : '280px'};">
+          ${buildContactSection(colors, size, labels, 'solidPanel', fs)}
         </div>
       </div>
-      ${buildContactSection(colors, size, labels, 'bar')}
+      ${buildContactSection(colors, size, labels, 'solidBar', fs)}
     </div>`;
 }
 
@@ -594,59 +815,94 @@ function renderGridQuad(property, colors, size, postType, openHouse, labels) {
   const photos = buildPhotoSlots(property.photos, 4);
   const isStory = size === 'instagram-story';
   const isFB = size === 'facebook-post';
+  const fs = getFontScale(size);
+  const gap = colors.photoGap || '0px';
+  const radius = colors.photoRadius || '0px';
+  const hasRadius = parseInt(radius) > 0;
+  const pad = hasRadius ? '16px' : '0';
 
   if (isStory) {
-    // Story: header + 2x2 grid + features panel
-    const barHeight = 90;
     return `
       <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
         <!-- Header -->
-        <div style="padding:28px 36px 20px;background:${colors.bg};">
-          ${buildInlineBadge(postType, colors, labels)}
-          <div style="width:40px;height:3px;background:${colors.accent};margin:10px 0;"></div>
-          ${buildPriceHtml(property, postType, colors, '30px', 'banner')}
-          <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:30px;color:${colors.text};line-height:1.15;margin-bottom:6px;">${escapeHtml(truncate(property.title, 45))}</div>
-          ${buildLocationHtml(property.location, colors, '13px')}
+        <div style="padding:36px 44px 16px;">
+          ${buildBrandingHtml(colors, fs)}
+          ${buildInlineBadge(postType, colors, labels, fs)}
+          <div style="margin-top:12px;">${buildTitleHtml(property.title, colors, fs, 'standard')}</div>
         </div>
-        <!-- Accent divider -->
-        <div style="height:3px;background:${colors.accent};"></div>
         <!-- 2x2 photo grid -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;position:absolute;top:240px;bottom:400px;left:0;right:0;">
-          ${photos.map(p => `<div style="overflow:hidden;"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
+        <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:${gap};padding:0 ${pad};height:38%;">
+          ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
         </div>
-        <!-- Features + Contact at bottom -->
-        <div style="position:absolute;bottom:0;left:0;right:0;height:400px;background:${colors.bg};padding:24px 36px;display:flex;flex-direction:column;justify-content:center;border-top:3px solid ${colors.accent};">
-          ${buildPropertyStats(property, colors, false, labels)}
-          ${buildFeaturesHtml(property.features, colors, labels, 5)}
-          ${buildContactSection(colors, size, labels, 'panel')}
+        <!-- Price overlap -->
+        <div style="position:relative;z-index:5;margin-top:-28px;margin-left:44px;">
+          ${buildPriceHtml(property, postType, colors, fs.price, 'overlap')}
         </div>
+        <!-- Bottom info -->
+        <div style="padding:16px 44px;">
+          ${buildLocationHtml(property.location, colors, fs.location)}
+          ${buildPropertyStats(property, colors, fs, labels, true)}
+          ${buildFeaturesHtml(property.features, colors, labels, 5, 'grid', fs)}
+        </div>
+        ${buildContactSection(colors, size, labels, 'solidBar', fs)}
       </div>`;
   }
 
-  // Square and Facebook: 2x2 grid fills canvas + central floating overlay
-  const barHeight = isFB ? 85 : 95;
-  const overlayWidth = isFB ? '380px' : '480px';
-  const overlayPad = isFB ? '22px 28px' : '30px 38px';
+  // Square and Facebook
+  if (hasRadius) {
+    // Light/colorful themes: structured layout with bg showing through
+    return `
+      <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
+        <!-- Top: title + badge -->
+        <div style="padding:${isFB ? '16px 32px' : '24px 40px'};display:flex;align-items:center;gap:16px;">
+          ${buildInlineBadge(postType, colors, labels, fs)}
+          <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.1;">${escapeHtml(truncate(property.title, 40))}</div>
+        </div>
+        <!-- 2x2 photo grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:${gap};padding:0 ${pad};height:${isFB ? '48%' : '48%'};">
+          ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
+        </div>
+        <!-- Price overlap -->
+        <div style="position:relative;z-index:5;margin-top:-28px;margin-left:${isFB ? '32px' : '40px'};">
+          ${buildPriceHtml(property, postType, colors, fs.price, 'overlap')}
+        </div>
+        <!-- Bottom info -->
+        <div style="padding:8px ${isFB ? '32px' : '40px'};display:flex;gap:24px;align-items:flex-start;">
+          <div style="flex:1;">
+            ${buildLocationHtml(property.location, colors, fs.location)}
+            ${buildPropertyStats(property, colors, fs, labels, false)}
+            ${buildFeaturesHtml(property.features, colors, labels, isFB ? 3 : 4, 'horizontal', fs)}
+          </div>
+        </div>
+        ${buildContactSection(colors, size, labels, 'solidBar', fs)}
+      </div>`;
+  }
 
+  // Dark/minimal themes: edge-to-edge grid with floating overlay
+  const overlayWidth = isFB ? '400px' : '500px';
   return `
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
-      ${buildBadge(postType, colors, property, openHouse, labels)}
+      ${buildBadge(postType, colors, property, openHouse, labels, fs)}
       <!-- 2x2 photo grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;position:absolute;top:0;bottom:${barHeight}px;left:0;right:0;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;position:absolute;top:0;bottom:95px;left:0;right:0;">
         ${photos.map(p => `<div style="overflow:hidden;"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
       </div>
       <!-- Central floating overlay -->
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%, -55%);width:${overlayWidth};background:${colors.bgPanel};border:2px solid ${colors.accent};padding:${overlayPad};z-index:5;text-align:center;">
-        ${buildPriceHtml(property, postType, colors, isFB ? '28px' : '34px', 'inline')}
-        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '26px' : '32px'};color:${colors.text};line-height:1.2;margin-bottom:10px;">${escapeHtml(truncate(property.title, 40))}</div>
-        ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">
-          ${svgIcon('pin', colors.accent, 18)}
-          <span style="font-family:'Montserrat',sans-serif;font-size:15px;color:${colors.textSecondary};letter-spacing:1.5px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:${overlayWidth};background:${colors.panelSolid};padding:${isFB ? '28px 36px' : '36px 44px'};z-index:5;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.3);">
+        ${buildPriceHtml(property, postType, colors, isFB ? '30px' : '38px', 'inline')}
+        <div style="font-family:'${colors.titleFont}',serif;font-weight:800;font-size:${isFB ? '28px' : '34px'};color:${colors.panelSolidText};line-height:1.2;margin-bottom:12px;">${escapeHtml(truncate(property.title, 40))}</div>
+        ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">
+          ${svgIcon('pin', colors.panelSolidText, 18)}
+          <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.panelSolidText};letter-spacing:1.5px;text-transform:uppercase;opacity:0.8;">${escapeHtml(property.location)}</span>
         </div>` : ''}
-        <div style="width:50px;height:2px;background:${colors.accent};margin:10px auto;"></div>
-        <div style="display:flex;justify-content:center;">${buildPropertyStats(property, colors, false, labels)}</div>
+        <div style="width:50px;height:3px;background:${colors.panelSolidText};margin:12px auto;opacity:0.3;"></div>
+        <div style="display:flex;justify-content:center;gap:28px;">
+          ${property.bedrooms ? `<div style="display:flex;align-items:center;gap:8px;">${svgIcon('bed', colors.panelSolidText, 22)}<span style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:20px;color:${colors.panelSolidText};">${property.bedrooms}</span></div>` : ''}
+          ${property.bathrooms ? `<div style="display:flex;align-items:center;gap:8px;">${svgIcon('bath', colors.panelSolidText, 22)}<span style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:20px;color:${colors.panelSolidText};">${property.bathrooms}</span></div>` : ''}
+          ${property.area ? `<div style="display:flex;align-items:center;gap:8px;">${svgIcon('area', colors.panelSolidText, 22)}<span style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:20px;color:${colors.panelSolidText};">${escapeHtml(property.area)}</span></div>` : ''}
+        </div>
       </div>
-      ${buildContactSection(colors, size, labels, 'bar')}
+      ${buildContactSection(colors, size, labels, 'solidBar', fs)}
     </div>`;
 }
 
@@ -655,74 +911,65 @@ function renderGridSix(property, colors, size, postType, openHouse, labels) {
   const photos = buildPhotoSlots(property.photos, 6);
   const isStory = size === 'instagram-story';
   const isFB = size === 'facebook-post';
-  const barHeight = isFB ? 85 : 95;
-
-  // Header height varies by size
-  const headerHeight = isStory ? 150 : (isFB ? 110 : 130);
-
-  // Open house extra info
-  let openHouseInfo = '';
-  if (postType === 'open-house' && openHouse) {
-    openHouseInfo = `<div style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.text};margin-top:4px;">
-      ${openHouse.date ? escapeHtml(openHouse.date) : ''}${openHouse.date && openHouse.time ? ' · ' : ''}${openHouse.time ? escapeHtml(openHouse.time) : ''}
-    </div>`;
-  }
+  const fs = getFontScale(size);
+  const gap = colors.photoGap || '0px';
+  const radius = colors.photoRadius || '0px';
+  const hasRadius = parseInt(radius) > 0;
+  const pad = hasRadius ? '16px' : '0';
 
   if (isStory) {
-    // Story: tall header + 3x2 grid + features/contact at bottom
     return `
       <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
-        <!-- Header strip -->
-        <div style="padding:24px 32px;background:${colors.bg};height:${headerHeight}px;display:flex;flex-direction:column;justify-content:center;border-bottom:3px solid ${colors.accent};">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
-            ${buildInlineBadge(postType, colors, labels)}
-            <span style="font-family:'Playfair Display',serif;font-weight:700;font-size:26px;color:${colors.text};">${escapeHtml(truncate(property.title, 35))}</span>
+        <!-- Header -->
+        <div style="padding:36px 44px 16px;">
+          ${buildBrandingHtml(colors, fs)}
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+            ${buildInlineBadge(postType, colors, labels, fs)}
+            <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.1;">${escapeHtml(truncate(property.title, 30))}</div>
           </div>
           <div style="display:flex;align-items:center;gap:16px;">
-            ${buildPriceHtml(property, postType, colors, '22px', 'highlight')}
-            ${property.location ? `<div style="display:flex;align-items:center;gap:4px;">
-              ${svgIcon('pin', colors.accent, 14)}
-              <span style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.textSecondary};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
-            </div>` : ''}
+            ${buildPriceHtml(property, postType, colors, fs.price, 'highlight')}
           </div>
-          ${openHouseInfo}
         </div>
-        <!-- 3x2 photo grid -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;position:absolute;top:${headerHeight}px;bottom:480px;left:0;right:0;">
-          ${photos.map(p => `<div style="overflow:hidden;"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
+        <!-- 3x2 photo grid with featured first photo -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:${gap};padding:0 ${pad};height:38%;">
+          ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
         </div>
-        <!-- Features + Contact at bottom -->
-        <div style="position:absolute;bottom:0;left:0;right:0;height:480px;background:${colors.bg};padding:24px 36px;display:flex;flex-direction:column;justify-content:center;border-top:3px solid ${colors.accent};">
-          ${buildPropertyStats(property, colors, false, labels)}
-          ${buildFeaturesHtml(property.features, colors, labels, 6)}
-          ${buildContactSection(colors, size, labels, 'panel')}
+        <!-- Bottom: features + contact -->
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:24px 44px 36px;background:${colors.bg};border-top:4px solid ${colors.accent};">
+          ${buildLocationHtml(property.location, colors, fs.location)}
+          ${buildPropertyStats(property, colors, fs, labels, true)}
+          ${buildFeaturesHtml(property.features, colors, labels, 6, 'grid', fs)}
+          ${buildContactSection(colors, size, labels, 'panel', fs)}
         </div>
       </div>`;
   }
 
-  // Square and Facebook: header strip + grid + agent bar
+  // Square and Facebook
+  const barH = isFB ? 80 : 95;
   return `
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
       <!-- Header strip -->
-      <div style="padding:${isFB ? '14px 28px' : '20px 36px'};background:${colors.bg};height:${headerHeight}px;display:flex;flex-direction:column;justify-content:center;border-bottom:3px solid ${colors.accent};">
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
-          ${buildInlineBadge(postType, colors, labels)}
-          <span style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isFB ? '22px' : '26px'};color:${colors.text};">${escapeHtml(truncate(property.title, 35))}</span>
+      <div style="padding:${isFB ? '16px 32px' : '22px 40px'};background:${colors.bgSecondary};display:flex;align-items:center;gap:16px;border-bottom:4px solid ${colors.accent};">
+        <div style="flex:0 0 auto;">
+          ${buildInlineBadge(postType, colors, labels, fs)}
         </div>
-        <div style="display:flex;align-items:center;gap:18px;">
-          ${buildPriceHtml(property, postType, colors, isFB ? '20px' : '22px', 'highlight')}
-          ${property.location ? `<div style="display:flex;align-items:center;gap:6px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${isFB ? fs.titleSecondary : fs.titleSecondary};color:${colors.text};line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(truncate(property.title, 35))}</div>
+          ${property.location ? `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
             ${svgIcon('pin', colors.accent, 16)}
-            <span style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.textSecondary};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
+            <span style="font-family:'Montserrat',sans-serif;font-size:${fs.location};color:${colors.textSecondary};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
           </div>` : ''}
         </div>
-        ${openHouseInfo}
+        <div style="flex:0 0 auto;">
+          ${buildPriceHtml(property, postType, colors, isFB ? '24px' : '28px', 'banner')}
+        </div>
       </div>
       <!-- 3x2 photo grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;position:absolute;top:${headerHeight}px;bottom:${barHeight}px;left:0;right:0;">
-        ${photos.map(p => `<div style="overflow:hidden;"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:${gap};padding:${hasRadius ? pad : '0'};position:absolute;top:${isFB ? '95px' : '110px'};bottom:${barH}px;left:0;right:0;">
+        ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
       </div>
-      ${buildContactSection(colors, size, labels, 'bar')}
+      ${buildContactSection(colors, size, labels, 'solidBar', fs)}
     </div>`;
 }
 
@@ -731,24 +978,26 @@ function renderCarouselSlides(property, colors, size, postType, openHouse, label
   const photos = property.photos || [];
   const slides = [];
   const isStory = size === 'instagram-story';
+  const fs = getFontScale(size);
+  const radius = colors.photoRadius || '0px';
 
   // ── Slide 1: Cover slide ──
   const coverPhoto = photos[0] || buildPhotoSlots([], 1)[0];
   slides.push(`
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
       <img src="${coverPhoto}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;" crossorigin="anonymous"/>
-      <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to top, ${colors.bg} 5%, ${colors.overlay} 45%, transparent 75%);"></div>
-      ${buildBadge(postType, colors, property, openHouse, labels)}
-      <div style="position:absolute;bottom:${isStory ? '60px' : '40px'};left:0;right:0;padding:0 44px;text-align:center;">
-        ${buildPriceHtml(property, postType, colors, isStory ? '36px' : '34px', 'banner')}
-        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isStory ? '40px' : '36px'};color:${colors.text};line-height:1.15;margin-bottom:10px;">${escapeHtml(truncate(property.title, 50))}</div>
-        ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">
-          ${svgIcon('pin', colors.text, 18)}
-          <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.textSecondary};letter-spacing:2px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
+      <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to top, ${colors.bg} 5%, ${colors.overlay} 40%, transparent 70%);"></div>
+      ${buildBadge(postType, colors, property, openHouse, labels, fs)}
+      <div style="position:absolute;bottom:${isStory ? '70px' : '50px'};left:0;right:0;padding:0 48px;text-align:center;">
+        ${buildPriceHtml(property, postType, colors, isStory ? fs.price : '38px', 'banner')}
+        <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:900;font-size:${isStory ? '48px' : '42px'};color:${colors.text};line-height:1.1;margin-bottom:14px;">${escapeHtml(truncate(property.title, 45))}</div>
+        ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;">
+          ${svgIcon('pin', colors.text, 20)}
+          <span style="font-family:'Montserrat',sans-serif;font-size:${fs.location};color:${colors.textSecondary};letter-spacing:2px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
         </div>` : ''}
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;">
-          <span style="font-family:'Montserrat',sans-serif;font-size:15px;color:${colors.textSecondary};letter-spacing:1.5px;">${escapeHtml(labels.swipeForMore)}</span>
-          ${svgIcon('arrow', colors.accent, 18)}
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:24px;">
+          <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.textSecondary};letter-spacing:2px;font-weight:600;">${escapeHtml(labels.swipeForMore)}</span>
+          ${svgIcon('arrow', colors.accent, 20)}
         </div>
       </div>
     </div>`);
@@ -759,46 +1008,46 @@ function renderCarouselSlides(property, colors, size, postType, openHouse, label
       <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
         <img src="${photos[i]}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;" crossorigin="anonymous"/>
         <!-- Bottom address strip -->
-        <div style="position:absolute;bottom:0;left:0;right:0;height:70px;background:linear-gradient(to top, ${colors.bg}ee, transparent);display:flex;align-items:flex-end;padding:0 24px 16px;justify-content:space-between;">
-          ${property.location ? `<div style="display:flex;align-items:center;gap:6px;">
-            ${svgIcon('pin', colors.accent, 14)}
-            <span style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.text};letter-spacing:1px;">${escapeHtml(property.location)}</span>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to top, ${colors.bg}ee, transparent);display:flex;align-items:flex-end;padding:0 28px 18px;justify-content:space-between;">
+          ${property.location ? `<div style="display:flex;align-items:center;gap:8px;">
+            ${svgIcon('pin', colors.accent, 16)}
+            <span style="font-family:'Montserrat',sans-serif;font-size:15px;color:${colors.text};letter-spacing:1px;font-weight:500;">${escapeHtml(property.location)}</span>
           </div>` : '<div></div>'}
-          <div style="font-family:'Montserrat',sans-serif;font-size:14px;color:${colors.textSecondary};background:${colors.bgPanel};padding:4px 12px;border-radius:12px;letter-spacing:1px;">${i + 1}/${photos.length + 1}</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:14px;font-weight:600;color:${colors.panelSolidText};background:${colors.panelSolid};padding:6px 16px;border-radius:20px;letter-spacing:1px;">${i + 1}/${photos.length + 1}</div>
         </div>
         <!-- Accent frame top -->
-        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${colors.accent};"></div>
+        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:${colors.accent};"></div>
       </div>`);
   }
 
   // ── Details slide (last) ──
   slides.push(`
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};display:flex;flex-direction:column;justify-content:center;align-items:center;padding:${isStory ? '60px 50px' : '50px 60px'};">
-      <!-- Decorative corner -->
-      <div style="position:absolute;top:0;left:0;width:80px;height:80px;border-top:4px solid ${colors.accent};border-left:4px solid ${colors.accent};"></div>
-      <div style="position:absolute;bottom:0;right:0;width:80px;height:80px;border-bottom:4px solid ${colors.accent};border-right:4px solid ${colors.accent};"></div>
+      <!-- Decorative corners -->
+      <div style="position:absolute;top:0;left:0;width:100px;height:100px;border-top:6px solid ${colors.accent};border-left:6px solid ${colors.accent};"></div>
+      <div style="position:absolute;bottom:0;right:0;width:100px;height:100px;border-bottom:6px solid ${colors.accent};border-right:6px solid ${colors.accent};"></div>
 
-      <div style="text-align:center;width:100%;max-width:600px;">
-        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:${isStory ? '38px' : '34px'};color:${colors.text};line-height:1.2;margin-bottom:12px;">${escapeHtml(truncate(property.title, 50))}</div>
-        ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;">
-          ${svgIcon('pin', colors.accent, 18)}
-          <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.textSecondary};letter-spacing:2px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
+      <div style="text-align:center;width:100%;max-width:650px;">
+        ${buildTitleHtml(property.title, colors, fs, 'standard')}
+        ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;">
+          ${svgIcon('pin', colors.accent, 20)}
+          <span style="font-family:'Montserrat',sans-serif;font-size:${fs.location};color:${colors.textSecondary};letter-spacing:2px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
         </div>` : ''}
-        ${buildPriceHtml(property, postType, colors, isStory ? '36px' : '32px', 'banner')}
-        <div style="width:60px;height:2px;background:${colors.accent};margin:16px auto;"></div>
-        <div style="display:flex;justify-content:center;">${buildPropertyStats(property, colors, false, labels)}</div>
+        ${buildPriceHtml(property, postType, colors, isStory ? fs.price : '38px', 'banner')}
+        <div style="width:60px;height:3px;background:${colors.accent};margin:18px auto;"></div>
+        <div style="display:flex;justify-content:center;">${buildPropertyStats(property, colors, fs, labels, true)}</div>
       </div>
 
       <!-- Features section -->
-      <div style="width:100%;max-width:500px;margin-top:20px;text-align:left;">
-        ${buildFeaturesHtml(property.features, colors, labels, 6)}
+      <div style="width:100%;max-width:550px;margin-top:24px;text-align:left;">
+        ${buildFeaturesHtml(property.features, colors, labels, 6, 'grid', fs)}
       </div>
 
-      ${property.description ? `<div style="font-family:'Montserrat',sans-serif;font-size:15px;color:${colors.textSecondary};line-height:1.6;margin-top:20px;max-width:500px;text-align:center;">${escapeHtml(truncate(property.description, 180))}</div>` : ''}
+      ${property.description ? `<div style="font-family:'Montserrat',sans-serif;font-size:${fs.body};color:${colors.textSecondary};line-height:1.6;margin-top:24px;max-width:550px;text-align:center;">${escapeHtml(truncate(property.description, 180))}</div>` : ''}
 
       <!-- Contact section -->
-      <div style="width:100%;max-width:500px;margin-top:16px;text-align:left;">
-        ${buildContactSection(colors, size, labels, 'panel')}
+      <div style="width:100%;max-width:550px;margin-top:20px;text-align:left;">
+        ${buildContactSection(colors, size, labels, 'panel', fs)}
       </div>
     </div>`);
 
