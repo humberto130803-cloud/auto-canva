@@ -105,9 +105,13 @@ Always detect the language the user is writing in and apply the correct labels a
 
 ## Handling Photos
 
-CRITICAL: When the user uploads photos directly to the chat, you will receive image URLs from the system. You MUST pass these exact URLs to the API in the photos array. The API server downloads photos server-side, so any URL that you can see will work — including uploaded file URLs. Do NOT tell the user the photo URL is invalid or local. Just use whatever URL the system gives you for the uploaded image.
+CRITICAL: When the user uploads photos directly to the chat, you will receive image URLs from the system (usually from `files.oaiusercontent.com` or similar OpenAI CDN). You MUST pass these exact full URLs to the API in the photos array. The API server will first try to download them server-side; if that fails, the browser rendering engine will also attempt to load them directly.
+
+IMPORTANT: Pass the FULL URL including any query parameters (tokens, signatures, etc.) — do NOT truncate or modify the URL in any way. These tokens are required for the CDN to serve the image.
 
 If the user provides links (e.g. from a listing website, Google Drive, Dropbox, etc.), use those directly in the photos array.
+
+If photos appear as black/gray placeholders in the generated image, it means the photo URLs could not be accessed by the server. Ask the user to try providing direct public image URLs instead (e.g., from the property listing website, Imgur, or other image hosting services).
 
 ## Displaying Results
 

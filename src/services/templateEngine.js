@@ -240,6 +240,13 @@ function truncate(str, maxLen) {
   return str.length > maxLen ? str.slice(0, maxLen - 1) + '…' : str;
 }
 
+/** Soft truncate — only cuts extremely long titles, allows CSS word-wrap to handle the rest */
+function softTruncate(str, maxLen) {
+  if (!str) return '';
+  const limit = maxLen || 120;
+  return str.length > limit ? str.slice(0, limit - 1) + '…' : str;
+}
+
 // ============================================================
 // SVG ICON SYSTEM (expanded with new icons)
 // ============================================================
@@ -284,21 +291,24 @@ function detectFeatureIcon(text) {
 // SHARED COMPONENT BUILDERS
 // ============================================================
 
+const PHOTO_PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="%23404040"/><rect x="340" y="230" width="120" height="100" rx="8" fill="none" stroke="%23666" stroke-width="4"/><circle cx="380" cy="270" r="12" fill="%23666"/><path d="M350 310 L380 280 L410 300 L430 285 L450 310" fill="none" stroke="%23666" stroke-width="3"/><text x="400" y="360" text-anchor="middle" font-family="Arial" font-size="18" fill="%23777">Photo</text></svg>'
+);
+
 function buildPhotoSlots(photos, count) {
-  const placeholder = 'data:image/svg+xml,' + encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="%23404040"/><rect x="340" y="230" width="120" height="100" rx="8" fill="none" stroke="%23666" stroke-width="4"/><circle cx="380" cy="270" r="12" fill="%23666"/><path d="M350 310 L380 280 L410 300 L430 285 L450 310" fill="none" stroke="%23666" stroke-width="3"/><text x="400" y="360" text-anchor="middle" font-family="Arial" font-size="18" fill="%23777">Photo</text></svg>'
-  );
   const result = [];
   for (let i = 0; i < count; i++) {
-    result.push(photos && photos[i] ? photos[i] : placeholder);
+    result.push(photos && photos[i] ? photos[i] : PHOTO_PLACEHOLDER);
   }
   return result;
 }
 
-/** Wrap a photo img tag with border-radius and overflow hidden */
+/** Wrap a photo img tag with border-radius, overflow hidden, and fallback on error */
 function photoImg(src, colors, extraStyle) {
   const radius = colors.photoRadius || '0px';
-  return `<div style="overflow:hidden;border-radius:${radius};height:100%;${extraStyle || ''}"><img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous"/></div>`;
+  // onerror: if the image fails to load (e.g., expired CDN URL), show a gray placeholder with a subtle icon
+  const fallbackBg = colors.bg === '#FFFFFF' || colors.bg === '#FDF8F0' ? '#e0e0e0' : '#404040';
+  return `<div style="overflow:hidden;border-radius:${radius};height:100%;background:${fallbackBg};${extraStyle || ''}"><img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous" onerror="this.onerror=null;this.src='${PHOTO_PLACEHOLDER}';"/></div>`;
 }
 
 function getPostTypeBadge(postType, labels) {
@@ -376,18 +386,18 @@ function buildTitleHtml(title, colors, fs, style) {
     // Reference 2 style: first words smaller, last word ENORMOUS
     const words = (title || '').split(' ');
     if (words.length <= 1) {
-      return `<div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:900;font-size:${fs.title};color:${colors.text};line-height:1.0;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;">${escapeHtml(truncate(title, 20))}</div>`;
+      return `<div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:900;font-size:${fs.title};color:${colors.text};line-height:1.0;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;word-wrap:break-word;overflow-wrap:break-word;">${escapeHtml(softTruncate(title, 60))}</div>`;
     }
     const lastWord = words.pop();
     const firstPart = words.join(' ');
     return `<div style="margin-bottom:16px;">
-      <div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:700;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.05;text-transform:uppercase;letter-spacing:2px;">${escapeHtml(truncate(firstPart, 30))}</div>
-      <div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:900;font-size:${fs.title};color:${colors.text};line-height:1.0;text-transform:uppercase;letter-spacing:3px;">${escapeHtml(truncate(lastWord, 18))}</div>
+      <div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:700;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.05;text-transform:uppercase;letter-spacing:2px;word-wrap:break-word;overflow-wrap:break-word;">${escapeHtml(softTruncate(firstPart, 80))}</div>
+      <div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:900;font-size:${fs.title};color:${colors.text};line-height:1.0;text-transform:uppercase;letter-spacing:3px;word-wrap:break-word;overflow-wrap:break-word;">${escapeHtml(softTruncate(lastWord, 40))}</div>
     </div>`;
   }
 
-  // 'standard' — large clean title
-  return `<div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.title};color:${colors.text};line-height:1.1;margin-bottom:14px;">${escapeHtml(truncate(title, 50))}</div>`;
+  // 'standard' — large clean title, allows word-wrap across multiple lines
+  return `<div style="font-family:'${font}',${isSerif ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.title};color:${colors.text};line-height:1.1;margin-bottom:14px;word-wrap:break-word;overflow-wrap:break-word;">${escapeHtml(softTruncate(title, 120))}</div>`;
 }
 
 function buildBrandingHtml(colors, fs) {
@@ -624,7 +634,7 @@ function renderHeroSingle(property, colors, size, postType, openHouse, labels) {
       <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
         <!-- Photo top -->
         <div style="position:absolute;top:${hasRadius ? '16px' : '0'};left:${hasRadius ? '16px' : '0'};right:${hasRadius ? '16px' : '0'};height:${hasRadius ? '44%' : '45%'};overflow:hidden;border-radius:${hasRadius ? radius : '0'};">
-          <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/>
+          <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/>
         </div>
         ${buildBadge(postType, colors, property, openHouse, labels, fs)}
         <!-- Price overlap -->
@@ -650,7 +660,7 @@ function renderHeroSingle(property, colors, size, postType, openHouse, labels) {
     <div style="position:relative;width:${dim.width}px;height:${dim.height}px;overflow:hidden;background:${colors.bg};">
       <!-- Photo right -->
       <div style="position:absolute;top:${hasRadius ? gap : '0'};right:${hasRadius ? gap : '0'};bottom:${hasRadius ? gap : '0'};width:${photoW};overflow:hidden;border-radius:${hasRadius ? radius : '0'};">
-        <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/>
+        <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/>
       </div>
       ${postType === 'just-sold' ? buildBadge(postType, colors, property, openHouse, labels, fs) : ''}
       <!-- Info panel left -->
@@ -688,8 +698,8 @@ function renderSplitDuo(property, colors, size, postType, openHouse, labels) {
         </div>
         <!-- Two photos side by side -->
         <div style="display:flex;gap:${gap};padding:0 ${hasRadius ? '16px' : '0'};height:40%;">
-          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
-          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>
+          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>
         </div>
         <!-- Price overlap -->
         <div style="position:relative;z-index:5;margin-top:-30px;margin-left:44px;">
@@ -723,8 +733,8 @@ function renderSplitDuo(property, colors, size, postType, openHouse, labels) {
       </div>
       <!-- Right: two photos stacked -->
       <div style="position:absolute;top:${hasRadius ? gap : '0'};right:${hasRadius ? gap : '0'};bottom:${hasRadius ? `calc(95px + ${gap})` : '95px'};width:${photoAreaW};display:flex;flex-direction:column;gap:${gap};">
-        <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
-        <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+        <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>
+        <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>
       </div>
       ${buildContactSection(colors, size, labels, 'solidBar', fs)}
     </div>`;
@@ -753,11 +763,11 @@ function renderFeatureTrio(property, colors, size, postType, openHouse, labels) 
         <!-- L-shape photos -->
         <div style="display:flex;gap:${gap};padding:0 ${pad};height:42%;">
           <div style="flex:0.4;display:flex;flex-direction:column;gap:${gap};">
-            <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
-            <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[2]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+            <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>
+            <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[2]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>
           </div>
           <div style="flex:0.6;overflow:hidden;border-radius:${radius};position:relative;">
-            <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/>
+            <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/>
           </div>
         </div>
         <!-- Price overlap -->
@@ -780,16 +790,16 @@ function renderFeatureTrio(property, colors, size, postType, openHouse, labels) 
       <!-- Top: badge + title strip -->
       <div style="padding:${isFB ? '16px 32px' : '24px 40px'};display:flex;align-items:center;gap:16px;">
         ${buildInlineBadge(postType, colors, labels, fs)}
-        <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.1;">${escapeHtml(truncate(property.title, 40))}</div>
+        <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.1;flex:1;min-width:0;">${escapeHtml(softTruncate(property.title, 90))}</div>
       </div>
       <!-- L-shape photo grid -->
       <div style="display:flex;gap:${gap};padding:0 ${pad};height:${isFB ? '52%' : '50%'};">
         <div style="flex:0.38;display:flex;flex-direction:column;gap:${gap};">
-          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
-          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[2]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>
+          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[1]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>
+          <div style="flex:1;overflow:hidden;border-radius:${radius};"><img src="${photos[2]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>
         </div>
         <div style="flex:0.62;overflow:hidden;border-radius:${radius};position:relative;">
-          <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/>
+          <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/>
         </div>
       </div>
       <!-- Price overlap -->
@@ -832,7 +842,7 @@ function renderGridQuad(property, colors, size, postType, openHouse, labels) {
         </div>
         <!-- 2x2 photo grid -->
         <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:${gap};padding:0 ${pad};height:38%;">
-          ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
+          ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>`).join('')}
         </div>
         <!-- Price overlap -->
         <div style="position:relative;z-index:5;margin-top:-28px;margin-left:44px;">
@@ -856,11 +866,11 @@ function renderGridQuad(property, colors, size, postType, openHouse, labels) {
         <!-- Top: title + badge -->
         <div style="padding:${isFB ? '16px 32px' : '24px 40px'};display:flex;align-items:center;gap:16px;">
           ${buildInlineBadge(postType, colors, labels, fs)}
-          <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.1;">${escapeHtml(truncate(property.title, 40))}</div>
+          <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.1;flex:1;min-width:0;">${escapeHtml(softTruncate(property.title, 90))}</div>
         </div>
         <!-- 2x2 photo grid -->
         <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:${gap};padding:0 ${pad};height:${isFB ? '48%' : '48%'};">
-          ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
+          ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>`).join('')}
         </div>
         <!-- Price overlap -->
         <div style="position:relative;z-index:5;margin-top:-28px;margin-left:${isFB ? '32px' : '40px'};">
@@ -885,12 +895,12 @@ function renderGridQuad(property, colors, size, postType, openHouse, labels) {
       ${buildBadge(postType, colors, property, openHouse, labels, fs)}
       <!-- 2x2 photo grid -->
       <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;position:absolute;top:0;bottom:95px;left:0;right:0;">
-        ${photos.map(p => `<div style="overflow:hidden;"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
+        ${photos.map(p => `<div style="overflow:hidden;"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>`).join('')}
       </div>
       <!-- Central floating overlay -->
       <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:${overlayWidth};background:${colors.panelSolid};padding:${isFB ? '28px 36px' : '36px 44px'};z-index:5;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.3);">
         ${buildPriceHtml(property, postType, colors, isFB ? '30px' : '38px', 'inline')}
-        <div style="font-family:'${colors.titleFont}',serif;font-weight:800;font-size:${isFB ? '28px' : '34px'};color:${colors.panelSolidText};line-height:1.2;margin-bottom:12px;">${escapeHtml(truncate(property.title, 40))}</div>
+        <div style="font-family:'${colors.titleFont}',serif;font-weight:800;font-size:${isFB ? '28px' : '34px'};color:${colors.panelSolidText};line-height:1.2;margin-bottom:12px;word-wrap:break-word;overflow-wrap:break-word;">${escapeHtml(softTruncate(property.title, 90))}</div>
         ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">
           ${svgIcon('pin', colors.panelSolidText, 18)}
           <span style="font-family:'Montserrat',sans-serif;font-size:16px;color:${colors.panelSolidText};letter-spacing:1.5px;text-transform:uppercase;opacity:0.8;">${escapeHtml(property.location)}</span>
@@ -925,7 +935,7 @@ function renderGridSix(property, colors, size, postType, openHouse, labels) {
           ${buildBrandingHtml(colors, fs)}
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
             ${buildInlineBadge(postType, colors, labels, fs)}
-            <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.1;">${escapeHtml(truncate(property.title, 30))}</div>
+            <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${fs.titleSecondary};color:${colors.text};line-height:1.1;flex:1;min-width:0;">${escapeHtml(softTruncate(property.title, 80))}</div>
           </div>
           <div style="display:flex;align-items:center;gap:16px;">
             ${buildPriceHtml(property, postType, colors, fs.price, 'highlight')}
@@ -933,7 +943,7 @@ function renderGridSix(property, colors, size, postType, openHouse, labels) {
         </div>
         <!-- 3x2 photo grid with featured first photo -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:${gap};padding:0 ${pad};height:38%;">
-          ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
+          ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>`).join('')}
         </div>
         <!-- Bottom: features + contact -->
         <div style="position:absolute;bottom:0;left:0;right:0;padding:24px 44px 36px;background:${colors.bg};border-top:4px solid ${colors.accent};">
@@ -955,7 +965,7 @@ function renderGridSix(property, colors, size, postType, openHouse, labels) {
           ${buildInlineBadge(postType, colors, labels, fs)}
         </div>
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${isFB ? fs.titleSecondary : fs.titleSecondary};color:${colors.text};line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(truncate(property.title, 35))}</div>
+          <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:800;font-size:${isFB ? fs.titleSecondary : fs.titleSecondary};color:${colors.text};line-height:1.1;">${escapeHtml(softTruncate(property.title, 80))}</div>
           ${property.location ? `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
             ${svgIcon('pin', colors.accent, 16)}
             <span style="font-family:'Montserrat',sans-serif;font-size:${fs.location};color:${colors.textSecondary};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(property.location)}</span>
@@ -967,7 +977,7 @@ function renderGridSix(property, colors, size, postType, openHouse, labels) {
       </div>
       <!-- 3x2 photo grid -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:${gap};padding:${hasRadius ? pad : '0'};position:absolute;top:${isFB ? '95px' : '110px'};bottom:${barH}px;left:0;right:0;">
-        ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/></div>`).join('')}
+        ${photos.map(p => `<div style="overflow:hidden;border-radius:${radius};"><img src="${p}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null;this.style.background='#404040';this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23404040%22/%3E%3C/svg%3E';"/></div>`).join('')}
       </div>
       ${buildContactSection(colors, size, labels, 'solidBar', fs)}
     </div>`;
@@ -990,7 +1000,7 @@ function renderCarouselSlides(property, colors, size, postType, openHouse, label
       ${buildBadge(postType, colors, property, openHouse, labels, fs)}
       <div style="position:absolute;bottom:${isStory ? '70px' : '50px'};left:0;right:0;padding:0 48px;text-align:center;">
         ${buildPriceHtml(property, postType, colors, isStory ? fs.price : '38px', 'banner')}
-        <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:900;font-size:${isStory ? '48px' : '42px'};color:${colors.text};line-height:1.1;margin-bottom:14px;">${escapeHtml(truncate(property.title, 45))}</div>
+        <div style="font-family:'${colors.titleFont}',${colors.titleFont === 'Playfair Display' ? 'serif' : 'sans-serif'};font-weight:900;font-size:${isStory ? '48px' : '42px'};color:${colors.text};line-height:1.1;margin-bottom:14px;word-wrap:break-word;overflow-wrap:break-word;">${escapeHtml(softTruncate(property.title, 100))}</div>
         ${property.location ? `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;">
           ${svgIcon('pin', colors.text, 20)}
           <span style="font-family:'Montserrat',sans-serif;font-size:${fs.location};color:${colors.textSecondary};letter-spacing:2px;text-transform:uppercase;">${escapeHtml(property.location)}</span>

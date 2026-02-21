@@ -69,16 +69,41 @@ function downloadImageAsBase64(url, maxRedirects = 8) {
 
       const contentType = res.headers['content-type'] || 'image/jpeg';
       const mime = contentType.split(';')[0].trim();
+
+      // Validate that the response is actually an image
+      const isImage = mime.startsWith('image/') || mime === 'application/octet-stream';
+      if (!isImage) {
+        return reject(new Error(`Not an image: content-type is ${mime}`));
+      }
+
       const chunks = [];
 
       res.on('data', chunk => chunks.push(chunk));
       res.on('end', () => {
         const buffer = Buffer.concat(chunks);
-        if (buffer.length < 100) {
-          return reject(new Error('Image too small, likely an error page'));
+        if (buffer.length < 500) {
+          return reject(new Error(`Image too small (${buffer.length} bytes), likely an error`));
         }
+
+        // Check magic bytes — validate it's actually an image binary
+        const head = buffer.slice(0, 4);
+        const isJPEG = head[0] === 0xFF && head[1] === 0xD8;
+        const isPNG = head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4E && head[3] === 0x47;
+        const isGIF = head[0] === 0x47 && head[1] === 0x49 && head[2] === 0x46;
+        const isWEBP = buffer.length > 12 && buffer.slice(8, 12).toString() === 'WEBP';
+        const isSVG = buffer.slice(0, 100).toString().trim().startsWith('<');
+
+        if (!isJPEG && !isPNG && !isGIF && !isWEBP && !isSVG) {
+          // Might be HTML error page or other non-image content
+          const textSample = buffer.slice(0, 200).toString();
+          if (textSample.includes('<html') || textSample.includes('<!DOCTYPE') || textSample.includes('Access Denied')) {
+            return reject(new Error(`Downloaded content is HTML/text, not an image`));
+          }
+        }
+
         const base64 = buffer.toString('base64');
-        resolve(`data:${mime};base64,${base64}`);
+        const finalMime = isJPEG ? 'image/jpeg' : isPNG ? 'image/png' : isGIF ? 'image/gif' : isWEBP ? 'image/webp' : mime;
+        resolve(`data:${finalMime};base64,${base64}`);
       });
       res.on('error', reject);
     });
@@ -108,7 +133,8 @@ async function downloadWithRetry(url, retries = 2) {
 
 /**
  * Pre-download all photos and replace URLs with base64 data URIs.
- * This ensures Puppeteer doesn't need to fetch external images.
+ * If download fails, KEEP the original URL so Puppeteer can try to load it
+ * directly from the browser context (it may have different network access).
  */
 async function preDownloadPhotos(property) {
   if (!property.photos || property.photos.length === 0) return property;
@@ -116,14 +142,21 @@ async function preDownloadPhotos(property) {
   const downloaded = { ...property, photos: [] };
 
   for (const photoUrl of property.photos) {
+    if (!photoUrl) {
+      downloaded.photos.push(null);
+      continue;
+    }
+
     try {
-      console.log(`[Download] Fetching: ${photoUrl.substring(0, 100)}...`);
+      console.log(`[Download] Fetching: ${photoUrl.substring(0, 120)}...`);
       const dataUri = await downloadWithRetry(photoUrl);
       downloaded.photos.push(dataUri);
       console.log(`[Download] OK (${Math.round(dataUri.length / 1024)}KB base64)`);
     } catch (err) {
-      console.error(`[Download] Failed after retries: ${err.message} — using placeholder`);
-      downloaded.photos.push(null); // Will become placeholder in template
+      console.error(`[Download] Failed after retries: ${err.message}`);
+      // IMPORTANT: Keep original URL instead of null so Puppeteer browser can try loading it directly
+      console.log(`[Download] Keeping original URL for Puppeteer to try: ${photoUrl.substring(0, 80)}...`);
+      downloaded.photos.push(photoUrl);
     }
   }
 
@@ -137,11 +170,22 @@ async function renderHtmlToImage(html, width, height) {
   try {
     await page.setViewport({ width, height, deviceScaleFactor: 1 });
 
-    // Since images are now base64-embedded, we only need to wait for fonts
-    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
+    // Set a real user-agent so CDNs that check it will respond properly
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+    // Check if there are any external URLs (non-data:) that Puppeteer needs to load
+    const hasExternalImages = html.includes('src="http://') || html.includes('src="https://');
+
+    if (hasExternalImages) {
+      // Wait for network if there are external images Puppeteer needs to fetch
+      await page.setContent(html, { waitUntil: 'networkidle0', timeout: 45000 });
+    } else {
+      // All images are base64, just wait for DOM
+      await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
+    }
 
     await page.evaluate(() => document.fonts.ready);
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, hasExternalImages ? 1500 : 500));
 
     const imageBuffer = await page.screenshot({
       type: 'png',
