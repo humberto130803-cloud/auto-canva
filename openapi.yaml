@@ -344,26 +344,11 @@ components:
         openaiFileIdRefs:
           type: array
           description: |
-            Photos uploaded by the user directly in ChatGPT.
-            ChatGPT automatically populates this field when the user uploads images.
-            Each item contains a download_url that the server will use to fetch the photo.
-            These photos are merged with any URLs in property.photos.
+            Property photos uploaded by the user in the conversation.
+            Include all image files the user has uploaded (JPG, PNG, WEBP).
+            These are the property listing photos to display in the post template.
           items:
-            type: object
-            properties:
-              name:
-                type: string
-                description: Original filename
-              download_url:
-                type: string
-                format: uri
-                description: Temporary URL to download the file
-              mime_type:
-                type: string
-                description: MIME type of the file
-              size:
-                type: integer
-                description: File size in bytes
+            type: string
 
     SingleImageResponse:
       type: object
