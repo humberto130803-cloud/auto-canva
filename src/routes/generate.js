@@ -10,6 +10,13 @@ const { LAYOUTS, POST_TYPES, THEME_NAMES, SIZE_NAMES } = require('../services/te
  * download_link is a signed URL valid for ~5 minutes.
  * See: https://platform.openai.com/docs/actions/sending-files
  */
+/**
+ * Extract photo URLs from openaiFileIdRefs if present.
+ * Returns array of { url, fileId } objects for cache-friendly downloading.
+ * ChatGPT sends uploaded files as JSON objects with:
+ *   { name, id, mime_type, download_link }
+ * download_link is a signed URL valid for ~5 minutes.
+ */
 function extractPhotosFromFileRefs(body) {
   const refs = body.openaiFileIdRefs;
   if (!refs || !Array.isArray(refs) || refs.length === 0) return null;
@@ -17,13 +24,13 @@ function extractPhotosFromFileRefs(body) {
   console.log(`[FileRef] Received ${refs.length} file ref(s). Raw type: ${typeof refs[0]}`);
   console.log(`[FileRef] Raw payload:`, JSON.stringify(refs).substring(0, 500));
 
-  const photoUrls = [];
+  const photos = [];
   for (const ref of refs) {
     // Handle both possible field names and formats
     if (typeof ref === 'string') {
       // Sometimes it arrives as a plain URL string
       if (ref.startsWith('http')) {
-        photoUrls.push(ref);
+        photos.push({ url: ref, fileId: null });
         console.log(`[FileRef] Got plain URL string: ${ref.substring(0, 100)}...`);
       }
       continue;
@@ -31,16 +38,17 @@ function extractPhotosFromFileRefs(body) {
 
     // Object format: { name, id, mime_type, download_link }
     const url = ref.download_link || ref.download_url || ref.url;
+    const fileId = ref.id || null;
     if (url) {
-      photoUrls.push(url);
-      console.log(`[FileRef] Got file: ${ref.name || 'unnamed'} (${ref.mime_type || 'unknown'}) — ${url.substring(0, 100)}...`);
+      photos.push({ url, fileId });
+      console.log(`[FileRef] Got file: ${ref.name || 'unnamed'} (id=${fileId}) — ${url.substring(0, 100)}...`);
     } else {
       console.log(`[FileRef] Ref has no download link. Keys: ${Object.keys(ref).join(', ')}`);
       console.log(`[FileRef] Full ref:`, JSON.stringify(ref).substring(0, 300));
     }
   }
 
-  return photoUrls.length > 0 ? photoUrls : null;
+  return photos.length > 0 ? photos : null;
 }
 
 router.post('/', async (req, res) => {
@@ -97,15 +105,25 @@ router.post('/', async (req, res) => {
     // Extract photos from openaiFileIdRefs if present (ChatGPT file uploads)
     const fileRefPhotos = extractPhotosFromFileRefs(req.body);
     if (fileRefPhotos) {
+      // fileRefPhotos is array of { url, fileId }
       const existingPhotos = property.photos || [];
-      property.photos = [...fileRefPhotos, ...existingPhotos];
-      console.log(`[Generate] Using ${fileRefPhotos.length} photos from openaiFileIdRefs + ${existingPhotos.length} from property.photos`);
+      const fileRefUrls = fileRefPhotos.map(p => p.url);
+      property.photos = [...fileRefUrls, ...existingPhotos];
+      // Store fileId mapping for cache-friendly downloading
+      property._photoFileIds = {};
+      fileRefPhotos.forEach(p => {
+        if (p.fileId && p.url) {
+          property._photoFileIds[p.url] = p.fileId;
+        }
+      });
+      console.log(`[Generate] Using ${fileRefUrls.length} photos from openaiFileIdRefs + ${existingPhotos.length} from property.photos`);
     }
 
     // Also log what photo URLs we have
     if (property.photos && property.photos.length > 0) {
       property.photos.forEach((url, i) => {
-        console.log(`[Generate] Photo ${i + 1}: ${url ? url.substring(0, 120) : 'null'}...`);
+        const fid = property._photoFileIds && property._photoFileIds[url];
+        console.log(`[Generate] Photo ${i + 1}: ${url ? url.substring(0, 120) : 'null'}${fid ? ` (fileId: ${fid})` : ''}...`);
       });
     }
 

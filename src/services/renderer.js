@@ -10,6 +10,31 @@ const GENERATED_DIR = path.join(__dirname, '..', '..', 'public', 'images', 'gene
 
 let browserInstance = null;
 
+// Cache downloaded photos in memory so expired download_links don't break repeat requests
+// Key: original URL (or a hash), Value: { dataUri, timestamp }
+const photoCache = new Map();
+const PHOTO_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+function getCachedPhoto(url) {
+  const entry = photoCache.get(url);
+  if (entry && (Date.now() - entry.timestamp) < PHOTO_CACHE_TTL) {
+    return entry.dataUri;
+  }
+  if (entry) photoCache.delete(url); // expired
+  return null;
+}
+
+function setCachedPhoto(url, dataUri) {
+  photoCache.set(url, { dataUri, timestamp: Date.now() });
+  // Evict old entries if cache grows too large (>50 photos)
+  if (photoCache.size > 50) {
+    const now = Date.now();
+    for (const [key, val] of photoCache) {
+      if (now - val.timestamp > PHOTO_CACHE_TTL) photoCache.delete(key);
+    }
+  }
+}
+
 async function getBrowser() {
   if (!browserInstance || !browserInstance.connected) {
     const launchOptions = {
@@ -163,15 +188,37 @@ async function preDownloadPhotos(property) {
       }
     }
 
+    // Determine cache key: use fileId if available (stable across requests),
+    // otherwise fall back to URL (which changes for signed URLs)
+    const fileIds = property._photoFileIds || {};
+    const fileId = fileIds[photoUrl];
+    const cacheKey = fileId || photoUrl;
+
+    // Check cache first (handles expired download_links on repeat requests)
+    const cached = getCachedPhoto(cacheKey);
+    if (cached) {
+      console.log(`[Download] Cache hit for ${fileId ? `fileId:${fileId}` : 'url'} (${Math.round(cached.length / 1024)}KB)`);
+      return cached;
+    }
+
     // External URL — try downloading
     try {
       console.log(`[Download] Fetching: ${photoUrl.substring(0, 120)}...`);
       const dataUri = await downloadWithRetry(photoUrl);
       console.log(`[Download] OK (${Math.round(dataUri.length / 1024)}KB base64)`);
+      // Cache by stable key (fileId preferred) for future requests
+      setCachedPhoto(cacheKey, dataUri);
       return dataUri;
     } catch (err) {
       console.error(`[Download] Failed after retries: ${err.message}`);
-      // Keep original URL for Puppeteer to try
+      // If we have a fileId, also check cache under the URL key as fallback
+      if (fileId) {
+        const urlCached = getCachedPhoto(photoUrl);
+        if (urlCached) {
+          console.log(`[Download] URL cache fallback hit`);
+          return urlCached;
+        }
+      }
       console.log(`[Download] Keeping original URL for Puppeteer to try`);
       return photoUrl;
     }
