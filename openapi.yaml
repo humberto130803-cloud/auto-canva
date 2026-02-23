@@ -1,11 +1,7 @@
 openapi: 3.1.0
 info:
   title: Real Estate Post Generator API
-  description: |
-    Generate professional real estate social media post images.
-    Supports multiple layouts, post types, color themes, and sizes.
-    Returns PNG images as inline base64 data URIs for immediate display.
-    Also supports receiving photos via ChatGPT file uploads (openaiFileIdRefs).
+  description: Generate real estate social media post images with multiple layouts, themes, and sizes. Returns base64 images.
   version: 2.0.0
 servers:
   - url: https://auto-canva.onrender.com
@@ -16,17 +12,7 @@ paths:
     post:
       operationId: generatePost
       summary: Generate a real estate social media post image
-      description: |
-        Takes property data and template configuration, renders a professional
-        social media post image, and returns the image as inline base64 data URI(s).
-        For carousel layouts, returns multiple slide images.
-
-        Photos can be provided in two ways:
-        1. Via property.photos array with public image URLs
-        2. Via openaiFileIdRefs when user uploads photos directly to ChatGPT
-
-        The response includes openai_image_url (single) or openai_image_urls (carousel)
-        containing base64 data URIs that can be displayed inline.
+      description: Renders a real estate post image from property data and template config. Returns base64 data URIs. Supports photo URLs and ChatGPT file uploads via openaiFileIdRefs.
       requestBody:
         required: true
         content:
@@ -59,9 +45,7 @@ paths:
     get:
       operationId: listTemplates
       summary: List all available template options
-      description: |
-        Returns all available layouts, post types, color themes, and sizes
-        that can be combined to generate posts.
+      description: Returns all available layouts, post types, color themes, and sizes.
       responses:
         '200':
           description: Template options listed successfully
@@ -74,17 +58,12 @@ paths:
     get:
       operationId: previewTemplate
       summary: Generate a preview of a template combination with sample data
-      description: |
-        Generates a preview image using sample property data.
-        The combo parameter format is: layout_postType_colorTheme_size
-        Example: hero-single_new-listing_dark_instagram-post
+      description: Generates a preview image using sample data. Combo format is layout_postType_colorTheme_size.
       parameters:
         - name: combo
           in: path
           required: true
-          description: |
-            Template combination in format: layout_postType_colorTheme_size
-            Example: hero-single_new-listing_dark_instagram-post
+          description: "Format: layout_postType_colorTheme_size (e.g. hero-single_new-listing_dark_instagram-post)"
           schema:
             type: string
             example: hero-single_new-listing_dark_instagram-post
@@ -113,7 +92,7 @@ paths:
     get:
       operationId: getImage
       summary: Serve a generated image file
-      description: Returns the PNG image file. Images may not persist across server restarts. Prefer using the inline base64 images from the generate endpoint.
+      description: Returns a generated PNG image file. Prefer using base64 from /generate.
       parameters:
         - name: filename
           in: path
@@ -162,14 +141,7 @@ components:
                 - grid-quad
                 - grid-six
                 - carousel-slides
-              description: |
-                The photo layout style.
-                hero-single: 1 hero photo with info panel overlay (left/bottom), features checklist, contact icons, price banner.
-                split-duo: Info panel on left + 2 photos stacked right, full details with features and contact.
-                feature-trio: L-shape photos (1 large + 2 small) with info bar, price overlay on main photo.
-                grid-quad: 4 photos in 2x2 grid with central floating info overlay.
-                grid-six: 6 photos in 3x2 grid with bold header strip.
-                carousel-slides: Cover slide + photo slides + details slide with features checklist.
+              description: "Layout style: hero-single(1), split-duo(2), feature-trio(3), grid-quad(4), grid-six(6), carousel-slides(N photos)"
             postType:
               type: string
               enum:
@@ -178,13 +150,7 @@ components:
                 - just-sold
                 - price-drop
                 - coming-soon
-              description: |
-                The type of real estate post.
-                new-listing: "NEW LISTING" badge.
-                open-house: "OPEN HOUSE" with date/time.
-                just-sold: "SOLD" stamp.
-                price-drop: "PRICE REDUCED" with old/new price.
-                coming-soon: "COMING SOON" teaser.
+              description: "Post type: new-listing, open-house, just-sold, price-drop, or coming-soon"
             colorTheme:
               type: string
               enum:
@@ -194,25 +160,14 @@ components:
                 - gold
                 - minimal
                 - custom
-              description: |
-                Color theme for the post.
-                dark: Rich dark background with bold gold accents — dramatic luxury feel.
-                light: Warm cream background with vibrant orange accents — bright and inviting.
-                blue: Light blue-gray background with vivid blue accents — modern professional.
-                gold: Clean white background with deep burgundy/maroon panels — bold and elegant.
-                minimal: Photo-dominant with dark overlays — sleek and modern.
-                custom: Use customColors field for custom primary and accent colors.
+              description: "Color theme: dark, light, blue, gold, minimal, or custom (with customColors)"
             size:
               type: string
               enum:
                 - instagram-post
                 - instagram-story
                 - facebook-post
-              description: |
-                Target image size.
-                instagram-post: 1080x1080.
-                instagram-story: 1080x1920.
-                facebook-post: 1200x630.
+              description: "Output size: instagram-post(1080x1080), instagram-story(1080x1920), facebook-post(1200x630)"
             customColors:
               type: object
               description: Required when colorTheme is "custom"
@@ -273,12 +228,7 @@ components:
               items:
                 type: string
                 format: uri
-              description: |
-                Array of photo URLs. Provide as many as the layout needs:
-                hero-single: 1, split-duo: 2, feature-trio: 3,
-                grid-quad: 4, grid-six: 6, carousel-slides: any number.
-                Missing photos will show a placeholder.
-                Photos can also be provided via openaiFileIdRefs (user uploads).
+              description: Array of photo URLs. Missing photos show placeholders. Can also use openaiFileIdRefs.
               example:
                 - "https://example.com/photo1.jpg"
                 - "https://example.com/photo2.jpg"
@@ -296,10 +246,7 @@ components:
               example: "10:00 AM - 2:00 PM"
         labels:
           type: object
-          description: |
-            Optional text labels for internationalization. Pass any subset of keys
-            to override English defaults. Useful for generating posts in Spanish
-            or any other language. All keys are optional.
+          description: Optional text labels for i18n. Override English defaults for Spanish or other languages.
           properties:
             newListing:
               type: string
@@ -343,10 +290,7 @@ components:
               example: "DESLIZA PARA VER MÁS"
         openaiFileIdRefs:
           type: array
-          description: |
-            Property photos uploaded by the user in the conversation.
-            Include all image files the user has uploaded (JPG, PNG, WEBP).
-            These are the property listing photos to display in the post template.
+          description: Photos uploaded by user in ChatGPT. Include all uploaded image files.
           items:
             type: string
 
@@ -366,10 +310,7 @@ components:
           example: "https://auto-canva.onrender.com/image/550e8400.png"
         openai_image_url:
           type: string
-          description: |
-            Base64 data URI of the generated image. Use this to display the image inline.
-            Format: data:image/png;base64,<data>
-            IMPORTANT: Always display this image to the user using markdown: ![Post](openai_image_url)
+          description: Base64 data URI of the generated image. Display with markdown ![Post](url).
 
     CarouselImageResponse:
       type: object
@@ -394,9 +335,7 @@ components:
           type: array
           items:
             type: string
-          description: |
-            Array of base64 data URIs for each slide. Use these to display slides inline.
-            IMPORTANT: Always display each slide to the user using markdown: ![Slide N](openai_image_urls[N])
+          description: Array of base64 data URIs for each carousel slide.
 
     SingleImageResult:
       type: object
