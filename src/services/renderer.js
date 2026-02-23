@@ -44,7 +44,7 @@ function downloadImageAsBase64(url, maxRedirects = 8) {
     const client = url.startsWith('https') ? https : http;
 
     const req = client.get(url, {
-      timeout: 30000,
+      timeout: 15000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'image/*,*/*;q=0.8',
@@ -121,14 +121,14 @@ function downloadImageAsBase64(url, maxRedirects = 8) {
 /**
  * Try downloading with retry logic.
  */
-async function downloadWithRetry(url, retries = 2) {
+async function downloadWithRetry(url, retries = 1) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       return await downloadImageAsBase64(url);
     } catch (err) {
       console.error(`[Download] Attempt ${attempt + 1} failed: ${err.message}`);
       if (attempt < retries) {
-        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+        await new Promise(r => setTimeout(r, 500));
       } else {
         throw err;
       }
@@ -145,26 +145,21 @@ async function preDownloadPhotos(property) {
   if (!property.photos || property.photos.length === 0) return property;
 
   const { getPhotoAsDataUri } = require('./photoStore');
-  const downloaded = { ...property, photos: [] };
 
-  for (const photoUrl of property.photos) {
-    if (!photoUrl) {
-      downloaded.photos.push(null);
-      continue;
-    }
+  // Download all photos in parallel for speed
+  const downloadPromises = property.photos.map(async (photoUrl) => {
+    if (!photoUrl) return null;
 
     // Check if this is our own /photo/:id URL — resolve from in-memory store
     const photoIdMatch = photoUrl.match(/\/photo\/([0-9a-f-]{36})$/i);
     if (photoIdMatch) {
       const dataUri = getPhotoAsDataUri(photoIdMatch[1]);
       if (dataUri) {
-        downloaded.photos.push(dataUri);
         console.log(`[Download] Resolved from store: ${photoIdMatch[1]} (${Math.round(dataUri.length / 1024)}KB)`);
-        continue;
+        return dataUri;
       } else {
         console.error(`[Download] Photo ${photoIdMatch[1]} not found in store (expired?)`);
-        downloaded.photos.push(null);
-        continue;
+        return null;
       }
     }
 
@@ -172,17 +167,18 @@ async function preDownloadPhotos(property) {
     try {
       console.log(`[Download] Fetching: ${photoUrl.substring(0, 120)}...`);
       const dataUri = await downloadWithRetry(photoUrl);
-      downloaded.photos.push(dataUri);
       console.log(`[Download] OK (${Math.round(dataUri.length / 1024)}KB base64)`);
+      return dataUri;
     } catch (err) {
       console.error(`[Download] Failed after retries: ${err.message}`);
       // Keep original URL for Puppeteer to try
       console.log(`[Download] Keeping original URL for Puppeteer to try`);
-      downloaded.photos.push(photoUrl);
+      return photoUrl;
     }
-  }
+  });
 
-  return downloaded;
+  const photos = await Promise.all(downloadPromises);
+  return { ...property, photos };
 }
 
 async function renderHtmlToImage(html, width, height) {
@@ -195,10 +191,13 @@ async function renderHtmlToImage(html, width, height) {
 
     const hasExternalImages = html.includes('src="http://') || html.includes('src="https://');
 
-    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 45000 });
+    // Use networkidle0 only if external images exist (rare — we pre-download as base64)
+    // Otherwise domcontentloaded is much faster
+    const waitStrategy = hasExternalImages ? 'networkidle0' : 'domcontentloaded';
+    await page.setContent(html, { waitUntil: waitStrategy, timeout: 30000 });
 
     await page.evaluate(() => document.fonts.ready);
-    await new Promise(r => setTimeout(r, hasExternalImages ? 1500 : 500));
+    await new Promise(r => setTimeout(r, hasExternalImages ? 1000 : 300));
 
     const imageBuffer = await page.screenshot({
       type: 'png',
@@ -273,4 +272,8 @@ async function closeBrowser() {
 process.on('SIGINT', closeBrowser);
 process.on('SIGTERM', closeBrowser);
 
-module.exports = { generateImage, renderHtmlToImage, closeBrowser, downloadWithRetry };
+async function warmupBrowser() {
+  await getBrowser();
+}
+
+module.exports = { generateImage, renderHtmlToImage, closeBrowser, downloadWithRetry, warmupBrowser };

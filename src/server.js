@@ -12,6 +12,7 @@ const uploadRoute = require('./routes/upload');
 const photoRoute = require('./routes/photo');
 const { cleanupOldImages } = require('./services/cleanup');
 const { cleanupExpiredPhotos } = require('./services/photoStore');
+const { warmupBrowser } = require('./services/renderer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -66,6 +67,13 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Base URL: ${process.env.BASE_URL || `http://localhost:${PORT}`}`);
   console.log(`Upload page: ${process.env.BASE_URL || `http://localhost:${PORT}`}/upload`);
+
+  // Pre-launch Puppeteer browser so first request doesn't cold-start
+  warmupBrowser().then(() => {
+    console.log('[Warmup] Puppeteer browser ready');
+  }).catch(err => {
+    console.error('[Warmup] Browser pre-launch failed (will retry on first request):', err.message);
+  });
 });
 
 module.exports = app;
