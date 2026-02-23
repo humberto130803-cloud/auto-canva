@@ -212,8 +212,8 @@ async function renderHtmlToImage(html, width, height) {
 }
 
 /**
- * Generate image and return as base64 data URI(s).
- * Also saves to disk for backwards compatibility with /image/ endpoint.
+ * Generate image and save to disk. Returns URL(s) for serving.
+ * Images are saved as PNG files and served via /image/ endpoint.
  */
 async function generateImage(templateConfig, property, openHouse, labels) {
   const { size, layout } = templateConfig;
@@ -239,22 +239,17 @@ async function generateImage(templateConfig, property, openHouse, labels) {
   if (Array.isArray(htmlResult)) {
     const baseId = uuidv4();
     const urls = [];
-    const images_base64 = [];
 
     for (let i = 0; i < htmlResult.length; i++) {
       const filename = `${baseId}-slide-${i + 1}.png`;
       const filePath = path.join(GENERATED_DIR, filename);
       const buffer = await renderHtmlToImage(htmlResult[i], dim.width, dim.height);
 
-      // Save to disk (backwards compat)
       fs.writeFileSync(filePath, buffer);
       urls.push(`${baseUrl}/image/${filename}`);
-
-      // Also return as base64
-      images_base64.push(`data:image/png;base64,${buffer.toString('base64')}`);
     }
 
-    return { type: 'carousel', urls, images_base64 };
+    return { type: 'carousel', urls };
   }
 
   // Single image
@@ -264,9 +259,8 @@ async function generateImage(templateConfig, property, openHouse, labels) {
 
   fs.writeFileSync(filePath, buffer);
   const url = `${baseUrl}/image/${filename}`;
-  const image_base64 = `data:image/png;base64,${buffer.toString('base64')}`;
 
-  return { type: 'single', url, image_base64 };
+  return { type: 'single', url };
 }
 
 async function closeBrowser() {

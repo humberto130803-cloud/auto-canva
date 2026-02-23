@@ -306,11 +306,8 @@ components:
         url:
           type: string
           format: uri
-          description: URL to download the generated image (may not persist across server restarts)
+          description: URL to view/download the generated image. Display with markdown ![Post](url).
           example: "https://auto-canva.onrender.com/image/550e8400.png"
-        openai_image_url:
-          type: string
-          description: Base64 data URI of the generated image. Display with markdown ![Post](url).
 
     CarouselImageResponse:
       type: object
@@ -330,12 +327,7 @@ components:
           items:
             type: string
             format: uri
-          description: URLs for each carousel slide image (may not persist across server restarts)
-        openai_image_urls:
-          type: array
-          items:
-            type: string
-          description: Array of base64 data URIs for each carousel slide.
+          description: URLs for each carousel slide. Display each with markdown ![Slide N](url).
 
     SingleImageResult:
       type: object
@@ -346,8 +338,6 @@ components:
         url:
           type: string
           format: uri
-        openai_image_url:
-          type: string
 
     CarouselImageResult:
       type: object
@@ -360,10 +350,6 @@ components:
           items:
             type: string
             format: uri
-        openai_image_urls:
-          type: array
-          items:
-            type: string
 
     TemplateListResponse:
       type: object

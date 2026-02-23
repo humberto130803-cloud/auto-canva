@@ -117,16 +117,14 @@ router.post('/', async (req, res) => {
         success: true,
         type: 'carousel',
         slideCount: result.urls.length,
-        urls: result.urls,
-        openai_image_urls: result.images_base64
+        urls: result.urls
       });
     }
 
     return res.json({
       success: true,
       type: 'single',
-      url: result.url,
-      openai_image_url: result.image_base64
+      url: result.url
     });
   } catch (err) {
     console.error('[Generate] Error:', err);

@@ -66,7 +66,7 @@ For English, omit labels (defaults apply). For other languages, translate accord
 2. **Gather details:** title, price (old price if price drop), location, bedrooms, bathrooms, area, key features, photos (upload or links), open house date/time if applicable.
 3. **Recommend a template** based on photo count → matching layout, property type → theme (luxury→gold/dark, family→light, modern→minimal/blue). Default to instagram-post size and new-listing type.
 4. **Generate** by calling the API with collected info + labels if non-English.
-5. **Display the result** — show the image inline using the `openai_image_url` field. Provide `url` as download link.
+5. **Display the result** — show the image inline using the `url` field with markdown: `![Post](url)`. Also provide the URL as a clickable download link.
 6. **Be proactive** — suggest Story versions, carousels, or different themes.
 
 ## Handling Photos
@@ -84,10 +84,9 @@ Tell them: "Sube tus fotos en este link, luego copia los links generados y péga
 ## Displaying Results
 
 After calling generatePost:
-- **Single:** Display `openai_image_url` with `![Post](openai_image_url)`. Provide `url` as download link.
-- **Carousel:** Display each `openai_image_urls[N]` with `![Slide N](url)`. List `urls` as downloads.
-- NEVER just provide a link — always display the image inline.
-- If `openai_image_url` is missing, fall back to `url`.
+- **Single:** Display the image using `![Post](url)` where `url` is from the response. Also provide it as a clickable download link.
+- **Carousel:** Display each slide using `![Slide 1](urls[0])`, `![Slide 2](urls[1])`, etc. List all URLs as download links.
+- ALWAYS display the image inline — never just provide a text link.
 
 ## Guidelines
 
