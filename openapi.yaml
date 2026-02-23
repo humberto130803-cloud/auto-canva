@@ -4,8 +4,9 @@ info:
   description: |
     Generate professional real estate social media post images.
     Supports multiple layouts, post types, color themes, and sizes.
-    Returns PNG image URLs ready for download and sharing.
-  version: 1.0.0
+    Returns PNG images as inline base64 data URIs for immediate display.
+    Also supports receiving photos via ChatGPT file uploads (openaiFileIdRefs).
+  version: 2.0.0
 servers:
   - url: https://auto-canva.onrender.com
     description: Production server
@@ -17,8 +18,15 @@ paths:
       summary: Generate a real estate social media post image
       description: |
         Takes property data and template configuration, renders a professional
-        social media post image, and returns the image URL(s).
-        For carousel layouts, returns multiple slide URLs.
+        social media post image, and returns the image as inline base64 data URI(s).
+        For carousel layouts, returns multiple slide images.
+
+        Photos can be provided in two ways:
+        1. Via property.photos array with public image URLs
+        2. Via openaiFileIdRefs when user uploads photos directly to ChatGPT
+
+        The response includes openai_image_url (single) or openai_image_urls (carousel)
+        containing base64 data URIs that can be displayed inline.
       requestBody:
         required: true
         content:
@@ -105,7 +113,7 @@ paths:
     get:
       operationId: getImage
       summary: Serve a generated image file
-      description: Returns the PNG image file. Images are available for 24 hours after generation.
+      description: Returns the PNG image file. Images may not persist across server restarts. Prefer using the inline base64 images from the generate endpoint.
       parameters:
         - name: filename
           in: path
@@ -188,12 +196,12 @@ components:
                 - custom
               description: |
                 Color theme for the post.
-                dark: Dark bg, white/gold text.
-                light: White/cream bg, dark text.
-                blue: Navy/blue tones.
-                gold: Black and gold luxury.
-                minimal: White, thin fonts.
-                custom: Use customColors field.
+                dark: Rich dark background with bold gold accents — dramatic luxury feel.
+                light: Warm cream background with vibrant orange accents — bright and inviting.
+                blue: Light blue-gray background with vivid blue accents — modern professional.
+                gold: Clean white background with deep burgundy/maroon panels — bold and elegant.
+                minimal: Photo-dominant with dark overlays — sleek and modern.
+                custom: Use customColors field for custom primary and accent colors.
             size:
               type: string
               enum:
@@ -270,6 +278,7 @@ components:
                 hero-single: 1, split-duo: 2, feature-trio: 3,
                 grid-quad: 4, grid-six: 6, carousel-slides: any number.
                 Missing photos will show a placeholder.
+                Photos can also be provided via openaiFileIdRefs (user uploads).
               example:
                 - "https://example.com/photo1.jpg"
                 - "https://example.com/photo2.jpg"
@@ -332,6 +341,29 @@ components:
               type: string
               description: Carousel swipe indicator text
               example: "DESLIZA PARA VER MÁS"
+        openaiFileIdRefs:
+          type: array
+          description: |
+            Photos uploaded by the user directly in ChatGPT.
+            ChatGPT automatically populates this field when the user uploads images.
+            Each item contains a download_url that the server will use to fetch the photo.
+            These photos are merged with any URLs in property.photos.
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Original filename
+              download_url:
+                type: string
+                format: uri
+                description: Temporary URL to download the file
+              mime_type:
+                type: string
+                description: MIME type of the file
+              size:
+                type: integer
+                description: File size in bytes
 
     SingleImageResponse:
       type: object
@@ -345,8 +377,14 @@ components:
         url:
           type: string
           format: uri
-          description: URL to download the generated image
-          example: "https://your-app.onrender.com/image/550e8400-e29b-41d4-a716-446655440000.png"
+          description: URL to download the generated image (may not persist across server restarts)
+          example: "https://auto-canva.onrender.com/image/550e8400.png"
+        openai_image_url:
+          type: string
+          description: |
+            Base64 data URI of the generated image. Use this to display the image inline.
+            Format: data:image/png;base64,<data>
+            IMPORTANT: Always display this image to the user using markdown: ![Post](openai_image_url)
 
     CarouselImageResponse:
       type: object
@@ -366,10 +404,14 @@ components:
           items:
             type: string
             format: uri
-          description: URLs for each carousel slide image
-          example:
-            - "https://your-app.onrender.com/image/abc123-slide-1.png"
-            - "https://your-app.onrender.com/image/abc123-slide-2.png"
+          description: URLs for each carousel slide image (may not persist across server restarts)
+        openai_image_urls:
+          type: array
+          items:
+            type: string
+          description: |
+            Array of base64 data URIs for each slide. Use these to display slides inline.
+            IMPORTANT: Always display each slide to the user using markdown: ![Slide N](openai_image_urls[N])
 
     SingleImageResult:
       type: object
@@ -380,6 +422,8 @@ components:
         url:
           type: string
           format: uri
+        openai_image_url:
+          type: string
 
     CarouselImageResult:
       type: object
@@ -392,6 +436,10 @@ components:
           items:
             type: string
             format: uri
+        openai_image_urls:
+          type: array
+          items:
+            type: string
 
     TemplateListResponse:
       type: object

@@ -3,6 +3,25 @@ const router = express.Router();
 const { generateImage } = require('../services/renderer');
 const { LAYOUTS, POST_TYPES, THEME_NAMES, SIZE_NAMES } = require('../services/templateEngine');
 
+/**
+ * Extract photo URLs from openaiFileIdRefs if present.
+ * ChatGPT sends uploaded files through this mechanism with temporary download URLs.
+ * See: https://platform.openai.com/docs/actions/sending-files
+ */
+function extractPhotosFromFileRefs(body) {
+  const refs = body.openaiFileIdRefs;
+  if (!refs || !Array.isArray(refs) || refs.length === 0) return null;
+
+  const photoUrls = [];
+  for (const ref of refs) {
+    if (ref.download_url) {
+      photoUrls.push(ref.download_url);
+      console.log(`[FileRef] Got file: ${ref.name || 'unnamed'} (${ref.mime_type || 'unknown'}) — ${ref.download_url.substring(0, 80)}...`);
+    }
+  }
+  return photoUrls.length > 0 ? photoUrls : null;
+}
+
 router.post('/', async (req, res) => {
   try {
     const { template, property, openHouse, labels } = req.body;
@@ -48,7 +67,16 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Property must have at least a "title"' });
     }
 
-    console.log(`[Generate] ${layout} / ${postType} / ${colorTheme} / ${size}`);
+    // Extract photos from openaiFileIdRefs if present (ChatGPT file uploads)
+    const fileRefPhotos = extractPhotosFromFileRefs(req.body);
+    if (fileRefPhotos) {
+      // Merge: fileRef photos take priority, then append any existing property.photos
+      const existingPhotos = property.photos || [];
+      property.photos = [...fileRefPhotos, ...existingPhotos];
+      console.log(`[Generate] Using ${fileRefPhotos.length} photos from openaiFileIdRefs + ${existingPhotos.length} from property.photos`);
+    }
+
+    console.log(`[Generate] ${layout} / ${postType} / ${colorTheme} / ${size} — ${(property.photos || []).length} photos`);
     const result = await generateImage(template, property, openHouse, labels);
 
     if (result.type === 'carousel') {
@@ -56,14 +84,16 @@ router.post('/', async (req, res) => {
         success: true,
         type: 'carousel',
         slideCount: result.urls.length,
-        urls: result.urls
+        urls: result.urls,
+        openai_image_urls: result.images_base64
       });
     }
 
     return res.json({
       success: true,
       type: 'single',
-      url: result.url
+      url: result.url,
+      openai_image_url: result.image_base64
     });
   } catch (err) {
     console.error('[Generate] Error:', err);
