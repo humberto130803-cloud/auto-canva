@@ -138,11 +138,13 @@ async function downloadWithRetry(url, retries = 2) {
 
 /**
  * Pre-download all photos and replace URLs with base64 data URIs.
+ * Recognizes our own /photo/:id URLs and resolves them from in-memory store.
  * If download fails, keep the original URL so Puppeteer can try loading it.
  */
 async function preDownloadPhotos(property) {
   if (!property.photos || property.photos.length === 0) return property;
 
+  const { getPhotoAsDataUri } = require('./photoStore');
   const downloaded = { ...property, photos: [] };
 
   for (const photoUrl of property.photos) {
@@ -151,6 +153,22 @@ async function preDownloadPhotos(property) {
       continue;
     }
 
+    // Check if this is our own /photo/:id URL — resolve from in-memory store
+    const photoIdMatch = photoUrl.match(/\/photo\/([0-9a-f-]{36})$/i);
+    if (photoIdMatch) {
+      const dataUri = getPhotoAsDataUri(photoIdMatch[1]);
+      if (dataUri) {
+        downloaded.photos.push(dataUri);
+        console.log(`[Download] Resolved from store: ${photoIdMatch[1]} (${Math.round(dataUri.length / 1024)}KB)`);
+        continue;
+      } else {
+        console.error(`[Download] Photo ${photoIdMatch[1]} not found in store (expired?)`);
+        downloaded.photos.push(null);
+        continue;
+      }
+    }
+
+    // External URL — try downloading
     try {
       console.log(`[Download] Fetching: ${photoUrl.substring(0, 120)}...`);
       const dataUri = await downloadWithRetry(photoUrl);

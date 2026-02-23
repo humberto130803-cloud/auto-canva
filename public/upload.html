@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subir Fotos — Post Generator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    color: #94a3b8;
+    margin-bottom: 32px;
+    text-align: center;
+    max-width: 500px;
+    line-height: 1.5;
+  }
+  .drop-zone {
+    width: 100%;
+    max-width: 600px;
+    min-height: 200px;
+    border: 2px dashed #475569;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #1e293b;
+    margin-bottom: 24px;
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: #3b82f6;
+    background: #1e293b;
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+  }
+  .drop-zone svg { margin-bottom: 16px; opacity: 0.6; }
+  .drop-zone p { color: #94a3b8; font-size: 16px; }
+  .drop-zone .hint { font-size: 13px; color: #64748b; margin-top: 8px; }
+  input[type="file"] { display: none; }
+
+  .previews {
+    width: 100%;
+    max-width: 600px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .preview-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    background: #1e293b;
+  }
+  .preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .preview-item .remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    background: rgba(239, 68, 68, 0.9);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .btn {
+    padding: 14px 40px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    margin-bottom: 24px;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .results {
+    width: 100%;
+    max-width: 600px;
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 24px;
+    display: none;
+  }
+  .results h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #22c55e;
+  }
+  .results .instructions {
+    background: #0f172a;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #94a3b8;
+  }
+  .results .instructions strong { color: #e2e8f0; }
+  .url-list {
+    list-style: none;
+    padding: 0;
+  }
+  .url-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #0f172a;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 12px;
+    word-break: break-all;
+    color: #60a5fa;
+  }
+  .url-item .num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    background: #3b82f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: -apple-system, sans-serif;
+  }
+  .copy-all {
+    margin-top: 16px;
+    width: 100%;
+    padding: 12px;
+    background: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-all:hover { background: #16a34a; }
+
+  .spinner {
+    display: none;
+    width: 32px;
+    height: 32px;
+    border: 3px solid #475569;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .status { color: #94a3b8; font-size: 14px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<h1>📸 Subir Fotos</h1>
+<p class="subtitle">
+  Sube tus fotos aquí y copia los links generados. Luego pégalos en el chat del GPT para crear tu post de redes sociales.
+</p>
+
+<div class="drop-zone" id="dropZone">
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 18h16" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <p>Arrastra tus fotos aquí</p>
+  <p class="hint">o haz clic para seleccionar — JPG, PNG, WEBP (máx 15MB cada una)</p>
+</div>
+<input type="file" id="fileInput" multiple accept="image/jpeg,image/png,image/webp,image/gif">
+
+<div class="previews" id="previews"></div>
+
+<div class="spinner" id="spinner"></div>
+<div class="status" id="status"></div>
+
+<button class="btn" id="uploadBtn" disabled>Subir Fotos</button>
+
+<div class="results" id="results">
+  <h2>✅ ¡Fotos listas!</h2>
+  <div class="instructions">
+    <strong>Paso siguiente:</strong> Copia todos los links de abajo y pégalos en el chat del GPT junto con la información de tu propiedad. El GPT usará estas fotos para generar tu post.
+  </div>
+  <ul class="url-list" id="urlList"></ul>
+  <button class="copy-all" id="copyAll">📋 Copiar Todos los Links</button>
+</div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const previews = document.getElementById('previews');
+const uploadBtn = document.getElementById('uploadBtn');
+const results = document.getElementById('results');
+const urlList = document.getElementById('urlList');
+const spinner = document.getElementById('spinner');
+const status = document.getElementById('status');
+const copyAll = document.getElementById('copyAll');
+
+let selectedFiles = [];
+
+// Drop zone events
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+function handleFiles(fileList) {
+  for (const file of fileList) {
+    if (!file.type.startsWith('image/')) continue;
+    if (file.size > 15 * 1024 * 1024) {
+      alert(`${file.name} es muy grande (máx 15MB)`);
+      continue;
+    }
+    selectedFiles.push(file);
+    addPreview(file, selectedFiles.length - 1);
+  }
+  uploadBtn.disabled = selectedFiles.length === 0;
+  uploadBtn.textContent = `Subir ${selectedFiles.length} Foto${selectedFiles.length !== 1 ? 's' : ''}`;
+}
+
+function addPreview(file, index) {
+  const div = document.createElement('div');
+  div.className = 'preview-item';
+  div.dataset.index = index;
+
+  const img = document.createElement('img');
+  img.src = URL.createObjectURL(file);
+
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'remove';
+  removeBtn.innerHTML = '×';
+  removeBtn.onclick = (e) => {
+    e.stopPropagation();
+    selectedFiles[index] = null;
+    div.remove();
+    const remaining = selectedFiles.filter(f => f);
+    uploadBtn.disabled = remaining.length === 0;
+    uploadBtn.textContent = remaining.length > 0 ? `Subir ${remaining.length} Foto${remaining.length !== 1 ? 's' : ''}` : 'Subir Fotos';
+  };
+
+  div.appendChild(img);
+  div.appendChild(removeBtn);
+  previews.appendChild(div);
+}
+
+uploadBtn.addEventListener('click', async () => {
+  const files = selectedFiles.filter(f => f);
+  if (files.length === 0) return;
+
+  uploadBtn.disabled = true;
+  spinner.style.display = 'block';
+  status.textContent = 'Subiendo fotos...';
+
+  try {
+    // Convert files to base64
+    const photos = [];
+    for (let i = 0; i < files.length; i++) {
+      status.textContent = `Procesando foto ${i + 1} de ${files.length}...`;
+      const base64 = await fileToBase64(files[i]);
+      photos.push({
+        data: base64,
+        mime: files[i].type,
+        name: files[i].name
+      });
+    }
+
+    status.textContent = 'Enviando al servidor...';
+
+    const response = await fetch('/api/upload/multi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photos })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) throw new Error(data.error || 'Upload failed');
+
+    // Show results
+    urlList.innerHTML = '';
+    const urls = [];
+    data.photos.forEach((photo, i) => {
+      urls.push(photo.url);
+      const li = document.createElement('li');
+      li.className = 'url-item';
+      li.innerHTML = `<span class="num">${i + 1}</span>${photo.url}`;
+      urlList.appendChild(li);
+    });
+
+    results.style.display = 'block';
+    status.textContent = `✅ ${data.count} foto(s) subida(s) exitosamente`;
+    spinner.style.display = 'none';
+
+    // Copy all button
+    copyAll.onclick = () => {
+      const text = urls.join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        copyAll.textContent = '✅ ¡Copiado!';
+        setTimeout(() => { copyAll.textContent = '📋 Copiar Todos los Links'; }, 2000);
+      });
+    };
+
+  } catch (err) {
+    status.textContent = `❌ Error: ${err.message}`;
+    spinner.style.display = 'none';
+    uploadBtn.disabled = false;
+  }
+});
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+</script>
+</body>
+</html>
