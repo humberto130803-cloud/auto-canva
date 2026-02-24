@@ -80,6 +80,8 @@ The API automatically downloads and stores photos from any URLs you provide (inc
 **Follow-up calls (Story, different theme, carousel, etc.) — use `photoUrls`:**
 The response from generatePost includes a `photoUrls` array. **You MUST save these and pass them as `property.photos` on every subsequent call for the same property.** These stable URLs won't expire like the original download links.
 
+**NEVER use `/mnt/data/` file paths as photo URLs.** These are ChatGPT sandbox paths that the server CANNOT access. They will always fail. Only use full `https://` URLs.
+
 Example flow:
 1. First call → response includes `photoUrls: ["https://auto-canva.onrender.com/photo/abc-123", ...]`
 2. User asks for Story version → call generatePost with `property.photos: ["https://auto-canva.onrender.com/photo/abc-123", ...]`

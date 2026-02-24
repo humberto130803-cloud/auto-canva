@@ -120,6 +120,20 @@ router.post('/', async (req, res) => {
       console.log(`[Generate] Using ${fileRefUrls.length} photos from openaiFileIdRefs + ${existingPhotos.length} from property.photos`);
     }
 
+    // Filter out /mnt/data/ sandbox paths — these are ChatGPT internal paths the server can't access
+    if (property.photos && property.photos.length > 0) {
+      const badPaths = property.photos.filter(u => u && (u.startsWith('/mnt/') || u.startsWith('/tmp/') || u.startsWith('/var/')));
+      if (badPaths.length > 0 && badPaths.length === property.photos.length && !fileRefPhotos) {
+        console.error(`[Generate] All photos are sandbox paths: ${badPaths[0].substring(0, 80)}`);
+        return res.status(400).json({
+          error: 'Invalid photo paths. Use the photoUrls from the previous generatePost response, not /mnt/data/ sandbox paths.',
+          hint: 'Pass the photoUrls array from your last response as property.photos'
+        });
+      }
+      // Remove any sandbox paths silently if mixed with real URLs
+      property.photos = property.photos.filter(u => !u || (!u.startsWith('/mnt/') && !u.startsWith('/tmp/') && !u.startsWith('/var/')));
+    }
+
     // Also log what photo URLs we have
     if (property.photos && property.photos.length > 0) {
       property.photos.forEach((url, i) => {
