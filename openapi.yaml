@@ -88,6 +88,48 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/upload/from-urls:
+    post:
+      operationId: uploadPhotos
+      summary: Upload photos from URLs to get stable photo links
+      description: Downloads photos from ephemeral URLs (e.g. openaiFileIdRefs download_links) and stores them. Returns stable /photo/{id} URLs (30-min TTL) for use in generatePost.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - urls
+              properties:
+                urls:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                  description: Array of photo download URLs to store
+      responses:
+        '200':
+          description: Photos stored successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  photos:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        url:
+                          type: string
+                          format: uri
+                          description: Stable photo URL to use in property.photos
+
   /image/{filename}:
     get:
       operationId: getImage
@@ -308,6 +350,12 @@ components:
           format: uri
           description: URL to view/download the generated image. Display with markdown ![Post](url).
           example: "https://auto-canva.onrender.com/image/550e8400.png"
+        photoUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Stable photo URLs (30-min TTL). SAVE these and re-use in property.photos for follow-up calls (Story, different theme, etc).
 
     CarouselImageResponse:
       type: object
@@ -328,6 +376,12 @@ components:
             type: string
             format: uri
           description: URLs for each carousel slide. Display each with markdown ![Slide N](url).
+        photoUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Stable photo URLs (30-min TTL). SAVE these and re-use in property.photos for follow-up calls (Story, different theme, etc).
 
     SingleImageResult:
       type: object

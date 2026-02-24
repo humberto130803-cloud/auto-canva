@@ -208,6 +208,11 @@ async function preDownloadPhotos(property) {
       console.log(`[Download] OK (${Math.round(dataUri.length / 1024)}KB base64)`);
       // Cache by stable key (fileId preferred) for future requests
       setCachedPhoto(cacheKey, dataUri);
+      // Also cache under URL if we cached by fileId, so future requests
+      // without openaiFileIdRefs can still find the photo by URL
+      if (fileId && cacheKey !== photoUrl) {
+        setCachedPhoto(photoUrl, dataUri);
+      }
       return dataUri;
     } catch (err) {
       console.error(`[Download] Failed after retries: ${err.message}`);
@@ -323,4 +328,4 @@ async function warmupBrowser() {
   await getBrowser();
 }
 
-module.exports = { generateImage, renderHtmlToImage, closeBrowser, downloadWithRetry, warmupBrowser };
+module.exports = { generateImage, renderHtmlToImage, closeBrowser, downloadImageAsBase64, downloadWithRetry, warmupBrowser };

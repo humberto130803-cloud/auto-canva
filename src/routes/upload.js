@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { storePhoto, getStats } = require('../services/photoStore');
+const { downloadImageAsBase64 } = require('../services/renderer');
 
 // Accept raw binary uploads with content-type
 router.post('/', express.raw({ type: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], limit: '15mb' }), (req, res) => {
@@ -74,6 +75,62 @@ router.post('/multi', express.json({ limit: '50mb' }), (req, res) => {
   } catch (err) {
     console.error('[Upload] Error:', err);
     return res.status(500).json({ error: 'Upload failed', details: err.message });
+  }
+});
+
+// POST /from-urls — download photos from URLs and store them as stable /photo/{id} URLs
+router.post('/from-urls', express.json(), async (req, res) => {
+  try {
+    const { urls } = req.body;
+
+    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+      return res.status(400).json({ error: 'No URLs provided. Send { urls: ["..."] }' });
+    }
+
+    if (urls.length > 20) {
+      return res.status(400).json({ error: 'Too many URLs (max 20)' });
+    }
+
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+    const results = [];
+
+    // Download all URLs in parallel
+    const downloads = await Promise.allSettled(
+      urls.map(async (url) => {
+        const dataUri = await downloadImageAsBase64(url);
+        // Parse data URI to get buffer and mime
+        const match = dataUri.match(/^data:([^;]+);base64,(.+)$/s);
+        if (!match) throw new Error('Invalid data URI from download');
+        const mime = match[1];
+        const buffer = Buffer.from(match[2], 'base64');
+        return { buffer, mime };
+      })
+    );
+
+    for (let i = 0; i < downloads.length; i++) {
+      const result = downloads[i];
+      if (result.status === 'fulfilled') {
+        const { buffer, mime } = result.value;
+        const id = storePhoto(buffer, mime);
+        const photoUrl = `${baseUrl}/photo/${id}`;
+        console.log(`[Upload/from-urls] Stored photo ${id} (${Math.round(buffer.length / 1024)}KB, ${mime})`);
+        results.push({ id, url: photoUrl });
+      } else {
+        console.error(`[Upload/from-urls] Failed to download URL ${i}: ${result.reason.message}`);
+        results.push({ error: result.reason.message, sourceUrl: urls[i] });
+      }
+    }
+
+    const stats = getStats();
+    console.log(`[PhotoStore] ${stats.count} photos stored, ${stats.memoryMB}MB memory`);
+
+    return res.json({
+      success: true,
+      photos: results
+    });
+  } catch (err) {
+    console.error('[Upload/from-urls] Error:', err);
+    return res.status(500).json({ error: 'Upload from URLs failed', details: err.message });
   }
 });
 

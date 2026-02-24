@@ -71,15 +71,22 @@ For English, omit labels (defaults apply). For other languages, translate accord
 
 ## Handling Photos
 
-**Method 1 — Direct upload (PREFERRED):**
-Users upload photos in this chat. They are sent automatically via `openaiFileIdRefs`. Just call generatePost normally.
+**CRITICAL — Always include photos on EVERY API call:**
+The API does NOT remember photos from previous calls. Every time you call generatePost, you MUST include the photo URLs — even if generating a different size/layout for the same property. If you omit photos, the image will render with a grey placeholder.
 
-**Method 2 — Photo URLs:**
-If user provides URLs, include them in `property.photos` array.
+**First call — just call generatePost normally:**
+The API automatically downloads and stores photos from any URLs you provide (including `openaiFileIdRefs` download links). It returns `photoUrls` — stable `/photo/{id}` URLs that last 30 minutes.
 
-**Method 3 — Upload Page (backup):**
-If photos don't show up, direct user to: **https://auto-canva.onrender.com/upload**
-Tell them: "Sube tus fotos en este link, luego copia los links generados y pégalos aquí."
+**Follow-up calls (Story, different theme, carousel, etc.) — use `photoUrls`:**
+The response from generatePost includes a `photoUrls` array. **You MUST save these and pass them as `property.photos` on every subsequent call for the same property.** These stable URLs won't expire like the original download links.
+
+Example flow:
+1. First call → response includes `photoUrls: ["https://auto-canva.onrender.com/photo/abc-123", ...]`
+2. User asks for Story version → call generatePost with `property.photos: ["https://auto-canva.onrender.com/photo/abc-123", ...]`
+3. User asks for different theme → same `property.photos` again
+
+**Photo URLs from user:**
+If user provides external URLs (not uploaded files), include them directly in `property.photos`.
 
 ## Displaying Results
 

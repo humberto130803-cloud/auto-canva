@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { generateImage } = require('../services/renderer');
+const { generateImage, downloadImageAsBase64 } = require('../services/renderer');
 const { LAYOUTS, POST_TYPES, THEME_NAMES, SIZE_NAMES } = require('../services/templateEngine');
+const { storePhoto } = require('../services/photoStore');
 
 /**
  * Extract photo URLs from openaiFileIdRefs if present.
@@ -127,22 +128,59 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Auto-store external photos in photoStore for stable URLs.
+    // This ensures follow-up calls (Story, different theme) work even after
+    // ephemeral download_links (e.g. from openaiFileIdRefs) expire.
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+    if (property.photos && property.photos.length > 0) {
+      const stablePhotos = await Promise.all(
+        property.photos.map(async (photoUrl) => {
+          if (!photoUrl) return null;
+
+          // Already a /photo/ URL — keep as-is
+          if (photoUrl.match(/\/photo\/[0-9a-f-]{36}$/i)) return photoUrl;
+
+          // External URL — download and store
+          try {
+            const dataUri = await downloadImageAsBase64(photoUrl);
+            const match = dataUri.match(/^data:([^;]+);base64,(.+)$/s);
+            if (match) {
+              const buffer = Buffer.from(match[2], 'base64');
+              const id = storePhoto(buffer, match[1]);
+              const stableUrl = `${baseUrl}/photo/${id}`;
+              console.log(`[Generate] Auto-stored photo → /photo/${id} (${Math.round(buffer.length / 1024)}KB)`);
+              return stableUrl;
+            }
+          } catch (err) {
+            console.error(`[Generate] Auto-store failed: ${err.message}`);
+          }
+          return photoUrl; // fallback to original
+        })
+      );
+      property.photos = stablePhotos.filter(Boolean);
+    }
+
     console.log(`[Generate] ${layout} / ${postType} / ${colorTheme} / ${size} — ${(property.photos || []).length} photos`);
     const result = await generateImage(template, property, openHouse, labels);
+
+    // Include stable photo URLs so the GPT can reuse them for follow-up calls
+    const photoUrls = (property.photos || []).filter(u => u && u.includes('/photo/'));
 
     if (result.type === 'carousel') {
       return res.json({
         success: true,
         type: 'carousel',
         slideCount: result.urls.length,
-        urls: result.urls
+        urls: result.urls,
+        photoUrls
       });
     }
 
     return res.json({
       success: true,
       type: 'single',
-      url: result.url
+      url: result.url,
+      photoUrls
     });
   } catch (err) {
     console.error('[Generate] Error:', err);
