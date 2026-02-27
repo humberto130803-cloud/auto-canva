@@ -41,6 +41,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/store-photos:
+    post:
+      operationId: storePhotos
+      summary: Store uploaded photos and get stable URLs
+      description: Call this IMMEDIATELY when user uploads photos. Stores them and returns stable URLs for use in generatePost.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                openaiFileIdRefs:
+                  type: array
+                  description: Photos uploaded by user in ChatGPT.
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Photos stored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  photoUrls:
+                    type: array
+                    items:
+                      type: string
+                      format: uri
+                    description: Stable photo URLs. Use these in property.photos for generatePost.
+                  message:
+                    type: string
+
   /templates:
     get:
       operationId: listTemplates

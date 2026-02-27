@@ -10,6 +10,7 @@ const templatesRoute = require('./routes/templates');
 const imageRoute = require('./routes/image');
 const uploadRoute = require('./routes/upload');
 const photoRoute = require('./routes/photo');
+const storePhotosRoute = require('./routes/storePhotos');
 const { cleanupOldImages } = require('./services/cleanup');
 const { cleanupExpiredPhotos } = require('./services/photoStore');
 const { warmupBrowser } = require('./services/renderer');
@@ -28,11 +29,17 @@ app.get('/upload', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'upload.html'));
 });
 
+// Template gallery — serve at /gallery
+app.get('/gallery', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'gallery.html'));
+});
+
 // API Routes
 app.use('/generate', generateRoute);
 app.use('/templates', templatesRoute);
 app.use('/image', imageRoute);
 app.use('/api/upload', uploadRoute);
+app.use('/api/store-photos', storePhotosRoute);
 app.use('/photo', photoRoute);
 
 // Privacy policy
