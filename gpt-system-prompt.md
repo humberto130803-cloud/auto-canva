@@ -71,24 +71,21 @@ For English, omit labels (defaults apply). For other languages, translate accord
 
 ## Handling Photos
 
-**CRITICAL — Always include photos on EVERY API call:**
-The API does NOT remember photos from previous calls. Every time you call generatePost, you MUST include the photo URLs — even if generating a different size/layout for the same property. If you omit photos, the image will render with a grey placeholder.
+**ABSOLUTE RULE: property.photos must ONLY contain full https:// URLs or be left empty.**
+NEVER put file paths like `/mnt/data/...`, `/tmp/...`, or `/var/...` in property.photos. These are your internal sandbox paths — the server CANNOT access them and they will ALWAYS fail. If you don't have https:// URLs for the photos, leave property.photos as an empty array `[]` and let `openaiFileIdRefs` handle uploaded files automatically.
 
-**First call — just call generatePost normally:**
-The API automatically downloads and stores photos from any URLs you provide (including `openaiFileIdRefs` download links). It returns `photoUrls` — stable `/photo/{id}` URLs that last 30 minutes.
+**When user uploads photos in chat:**
+Just call generatePost normally with `property.photos: []`. The uploaded files are automatically sent via `openaiFileIdRefs` — you don't need to do anything special. Do NOT try to save uploaded files or reference them by path.
 
-**Follow-up calls (Story, different theme, carousel, etc.) — use `photoUrls`:**
-The response from generatePost includes a `photoUrls` array. **You MUST save these and pass them as `property.photos` on every subsequent call for the same property.** These stable URLs won't expire like the original download links.
+**After the first successful call:**
+The response includes `photoUrls` — stable https:// URLs. **Save these and pass them as `property.photos` on EVERY follow-up call** (Story, different theme, carousel). The API does NOT remember photos between calls.
 
-**NEVER use `/mnt/data/` file paths as photo URLs.** These are ChatGPT sandbox paths that the server CANNOT access. They will always fail. Only use full `https://` URLs.
+**Example flow:**
+1. User uploads photos → call generatePost with `property.photos: []`
+2. Response includes `photoUrls: ["https://auto-canva.onrender.com/photo/abc-123"]`
+3. User asks for Story → call with `property.photos: ["https://auto-canva.onrender.com/photo/abc-123"]`
 
-Example flow:
-1. First call → response includes `photoUrls: ["https://auto-canva.onrender.com/photo/abc-123", ...]`
-2. User asks for Story version → call generatePost with `property.photos: ["https://auto-canva.onrender.com/photo/abc-123", ...]`
-3. User asks for different theme → same `property.photos` again
-
-**Photo URLs from user:**
-If user provides external URLs (not uploaded files), include them directly in `property.photos`.
+**If the response contains a `warning` field**, it means photos failed. Tell the user to re-upload photos directly in the chat or use: **https://auto-canva.onrender.com/upload**
 
 ## Displaying Results
 

@@ -6,13 +6,6 @@ const { storePhoto } = require('../services/photoStore');
 
 /**
  * Extract photo URLs from openaiFileIdRefs if present.
- * ChatGPT sends uploaded files as JSON objects with:
- *   { name, id, mime_type, download_link }
- * download_link is a signed URL valid for ~5 minutes.
- * See: https://platform.openai.com/docs/actions/sending-files
- */
-/**
- * Extract photo URLs from openaiFileIdRefs if present.
  * Returns array of { url, fileId } objects for cache-friendly downloading.
  * ChatGPT sends uploaded files as JSON objects with:
  *   { name, id, mime_type, download_link }
@@ -120,18 +113,16 @@ router.post('/', async (req, res) => {
       console.log(`[Generate] Using ${fileRefUrls.length} photos from openaiFileIdRefs + ${existingPhotos.length} from property.photos`);
     }
 
-    // Filter out /mnt/data/ sandbox paths — these are ChatGPT internal paths the server can't access
+    // Silently filter out /mnt/data/ sandbox paths — these are ChatGPT internal paths
+    // the server can't access. Don't return an error; just remove them and proceed.
+    let sandboxPathsRemoved = 0;
     if (property.photos && property.photos.length > 0) {
-      const badPaths = property.photos.filter(u => u && (u.startsWith('/mnt/') || u.startsWith('/tmp/') || u.startsWith('/var/')));
-      if (badPaths.length > 0 && badPaths.length === property.photos.length && !fileRefPhotos) {
-        console.error(`[Generate] All photos are sandbox paths: ${badPaths[0].substring(0, 80)}`);
-        return res.status(400).json({
-          error: 'Invalid photo paths. Use the photoUrls from the previous generatePost response, not /mnt/data/ sandbox paths.',
-          hint: 'Pass the photoUrls array from your last response as property.photos'
-        });
-      }
-      // Remove any sandbox paths silently if mixed with real URLs
+      const before = property.photos.length;
       property.photos = property.photos.filter(u => !u || (!u.startsWith('/mnt/') && !u.startsWith('/tmp/') && !u.startsWith('/var/')));
+      sandboxPathsRemoved = before - property.photos.length;
+      if (sandboxPathsRemoved > 0) {
+        console.warn(`[Generate] Removed ${sandboxPathsRemoved} sandbox paths (server cannot access /mnt/data/ paths)`);
+      }
     }
 
     // Also log what photo URLs we have
@@ -180,22 +171,32 @@ router.post('/', async (req, res) => {
     // Include stable photo URLs so the GPT can reuse them for follow-up calls
     const photoUrls = (property.photos || []).filter(u => u && u.includes('/photo/'));
 
+    // Build warning if sandbox paths were stripped and no real photos remain
+    let warning = null;
+    if (sandboxPathsRemoved > 0 && photoUrls.length === 0) {
+      warning = `${sandboxPathsRemoved} photo(s) were /mnt/data/ sandbox paths that the server cannot access. The image was generated with placeholder backgrounds. Ask the user to re-upload photos directly in this message, or have them use the upload page at ${baseUrl}/upload`;
+    }
+
     if (result.type === 'carousel') {
-      return res.json({
+      const response = {
         success: true,
         type: 'carousel',
         slideCount: result.urls.length,
         urls: result.urls,
         photoUrls
-      });
+      };
+      if (warning) response.warning = warning;
+      return res.json(response);
     }
 
-    return res.json({
+    const response = {
       success: true,
       type: 'single',
       url: result.url,
       photoUrls
-    });
+    };
+    if (warning) response.warning = warning;
+    return res.json(response);
   } catch (err) {
     console.error('[Generate] Error:', err);
     return res.status(500).json({ error: 'Image generation failed', details: err.message });

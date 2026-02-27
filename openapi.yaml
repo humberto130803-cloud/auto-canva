@@ -356,6 +356,9 @@ components:
             type: string
             format: uri
           description: Stable photo URLs (30-min TTL). SAVE these and re-use in property.photos for follow-up calls (Story, different theme, etc).
+        warning:
+          type: string
+          description: If present, photos failed to load. Tell user to re-upload photos in chat.
 
     CarouselImageResponse:
       type: object
@@ -382,6 +385,9 @@ components:
             type: string
             format: uri
           description: Stable photo URLs (30-min TTL). SAVE these and re-use in property.photos for follow-up calls (Story, different theme, etc).
+        warning:
+          type: string
+          description: If present, photos failed to load. Tell user to re-upload photos in chat.
 
     SingleImageResult:
       type: object
