@@ -12,7 +12,7 @@ paths:
     post:
       operationId: generatePost
       summary: Generate a real estate social media post image
-      description: Renders a real estate post image from property data and template config. Returns base64 data URIs. Supports photo URLs and ChatGPT file uploads via openaiFileIdRefs.
+      description: Renders a post image. IMPORTANT - set property.photos to the photoUrls from storePhotos. Returns image URLs.
       requestBody:
         required: true
         content:
@@ -306,10 +306,10 @@ components:
               items:
                 type: string
                 format: uri
-              description: Array of photo URLs. Missing photos show placeholders. Can also use openaiFileIdRefs.
+              description: "REQUIRED: Use the photoUrls from storePhotos response. Always include this."
               example:
-                - "https://example.com/photo1.jpg"
-                - "https://example.com/photo2.jpg"
+                - "https://auto-canva.onrender.com/photo/abc-123-def"
+                - "https://auto-canva.onrender.com/photo/ghi-456-jkl"
         openHouse:
           type: object
           description: Open house details (used with open-house post type)

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { generateImage, downloadImageAsBase64 } = require('../services/renderer');
 const { LAYOUTS, POST_TYPES, THEME_NAMES, SIZE_NAMES } = require('../services/templateEngine');
-const { storePhoto } = require('../services/photoStore');
+const { storePhoto, getLastBatch } = require('../services/photoStore');
 
 /**
  * Extract photo URLs from openaiFileIdRefs if present.
@@ -49,8 +49,12 @@ router.post('/', async (req, res) => {
   try {
     const { template, property, openHouse, labels } = req.body;
 
-    // Log the full request body keys for debugging
+    // Log the full request for debugging photo issues
     console.log(`[Generate] Request body keys: ${Object.keys(req.body).join(', ')}`);
+    console.log(`[Generate] property.photos received: ${property && property.photos ? property.photos.length + ' URLs' : 'NONE'}`);
+    if (property && property.photos && property.photos.length > 0) {
+      property.photos.forEach((u, i) => console.log(`[Generate]   photo[${i}]: ${u ? u.substring(0, 100) : 'null'}`));
+    }
     if (req.body.openaiFileIdRefs) {
       console.log(`[Generate] openaiFileIdRefs present: ${Array.isArray(req.body.openaiFileIdRefs) ? req.body.openaiFileIdRefs.length + ' items' : typeof req.body.openaiFileIdRefs}`);
     }
@@ -96,21 +100,40 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Property must have at least a "title"' });
     }
 
-    // Extract photos from openaiFileIdRefs if present (ChatGPT file uploads)
-    const fileRefPhotos = extractPhotosFromFileRefs(req.body);
-    if (fileRefPhotos) {
-      // fileRefPhotos is array of { url, fileId }
-      const existingPhotos = property.photos || [];
-      const fileRefUrls = fileRefPhotos.map(p => p.url);
-      property.photos = [...fileRefUrls, ...existingPhotos];
-      // Store fileId mapping for cache-friendly downloading
-      property._photoFileIds = {};
-      fileRefPhotos.forEach(p => {
-        if (p.fileId && p.url) {
-          property._photoFileIds[p.url] = p.fileId;
-        }
-      });
-      console.log(`[Generate] Using ${fileRefUrls.length} photos from openaiFileIdRefs + ${existingPhotos.length} from property.photos`);
+    // Check if property.photos already has stable /photo/ URLs (from storePhotos).
+    // If so, SKIP openaiFileIdRefs — those download_links are likely expired and
+    // would get prepended, pushing the good URLs to the back where layouts don't use them.
+    const hasStablePhotos = (property.photos || []).some(u => u && u.includes('/photo/'));
+
+    if (hasStablePhotos) {
+      console.log(`[Generate] property.photos already has stable /photo/ URLs — skipping openaiFileIdRefs`);
+      console.log(`[Generate] Photos: ${(property.photos || []).map(u => u ? u.substring(0, 80) : 'null').join(', ')}`);
+    } else {
+      // No stable photos — try extracting from openaiFileIdRefs (ChatGPT file uploads)
+      const fileRefPhotos = extractPhotosFromFileRefs(req.body);
+      if (fileRefPhotos) {
+        const existingPhotos = property.photos || [];
+        const fileRefUrls = fileRefPhotos.map(p => p.url);
+        property.photos = [...fileRefUrls, ...existingPhotos];
+        property._photoFileIds = {};
+        fileRefPhotos.forEach(p => {
+          if (p.fileId && p.url) {
+            property._photoFileIds[p.url] = p.fileId;
+          }
+        });
+        console.log(`[Generate] Using ${fileRefUrls.length} photos from openaiFileIdRefs + ${existingPhotos.length} from property.photos`);
+      }
+    }
+
+    // FALLBACK: If still no photos, check the last storePhotos batch (within 5 min)
+    if (!property.photos || property.photos.length === 0) {
+      const recentPhotos = getLastBatch();
+      if (recentPhotos.length > 0) {
+        property.photos = recentPhotos;
+        console.log(`[Generate] No photos in request — using ${recentPhotos.length} from recent storePhotos batch`);
+      } else {
+        console.log(`[Generate] No photos available from any source`);
+      }
     }
 
     // Silently filter out /mnt/data/ sandbox paths — these are ChatGPT internal paths

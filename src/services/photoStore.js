@@ -12,6 +12,9 @@ const photos = new Map();
 // TTL: 30 minutes
 const TTL_MS = 30 * 60 * 1000;
 
+// Track the most recently stored batch of photos (fallback for when GPT forgets to pass photoUrls)
+let lastBatch = { urls: [], timestamp: 0 };
+
 /**
  * Store a photo buffer and return its unique ID.
  */
@@ -77,4 +80,22 @@ function getStats() {
   };
 }
 
-module.exports = { storePhoto, getPhoto, getPhotoAsDataUri, cleanupExpiredPhotos, getStats };
+/**
+ * Save a batch of photo URLs (called after storePhotos succeeds).
+ * Used as fallback when generatePost doesn't receive photos.
+ */
+function setLastBatch(urls) {
+  lastBatch = { urls: [...urls], timestamp: Date.now() };
+  console.log(`[PhotoStore] Saved last batch: ${urls.length} photo(s)`);
+}
+
+/**
+ * Get the last stored batch of photos (within maxAge).
+ * Returns empty array if expired.
+ */
+function getLastBatch(maxAgeMs = 5 * 60 * 1000) {
+  if (Date.now() - lastBatch.timestamp > maxAgeMs) return [];
+  return lastBatch.urls;
+}
+
+module.exports = { storePhoto, getPhoto, getPhotoAsDataUri, cleanupExpiredPhotos, getStats, setLastBatch, getLastBatch };

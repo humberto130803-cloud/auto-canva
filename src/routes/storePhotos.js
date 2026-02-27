@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { downloadImageAsBase64 } = require('../services/renderer');
-const { storePhoto } = require('../services/photoStore');
+const { storePhoto, setLastBatch } = require('../services/photoStore');
 
 /**
  * POST /api/store-photos
@@ -80,6 +80,11 @@ router.post('/', async (req, res) => {
 
     const photoUrls = results.filter(Boolean);
     console.log(`[StorePhotos] Stored ${photoUrls.length}/${downloads.length} photos`);
+
+    // Save as "last batch" so generatePost can use them even if GPT forgets to pass them
+    if (photoUrls.length > 0) {
+      setLastBatch(photoUrls);
+    }
 
     return res.json({
       success: true,
