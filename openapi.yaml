@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Real Estate Post Generator API
-  description: Generate real estate social media post images with multiple layouts, themes, and sizes. Returns base64 images.
+  description: Generate real estate social media post images with multiple layouts, themes, and sizes.
   version: 2.0.0
 servers:
   - url: https://auto-canva.onrender.com
@@ -44,39 +44,25 @@ paths:
   /api/store-photos:
     post:
       operationId: storePhotos
-      summary: Store uploaded photos and get stable URLs
+      summary: Store photos as stable URLs for generatePost
       description: |
-        Call this IMMEDIATELY when user uploads photos. Accepts three input methods:
-        1. openaiFileIdRefs — auto-injected by ChatGPT (preferred when it works)
-        2. images — base64-encoded image data (reliable fallback via Code Interpreter)
-        3. urls — plain URL array (for photos from listing pages)
-        Returns stable /photo/{id} URLs (30-min TTL) for use in generatePost.
-        If openaiFileIdRefs returns empty, use Code Interpreter to base64-encode the uploaded images and retry with the "images" field.
+        Stores base64-encoded photos and returns stable /photo/{id} URLs (30-min TTL).
+        BEFORE calling this, use Code Interpreter to read uploaded photos from /mnt/data/,
+        compress them (thumbnail 400px, JPEG quality 25), and base64-encode them.
+        Send ONE image per call. The payload will be ~20KB which is small and fast.
+        Do NOT use urllib/requests in Code Interpreter — it has no network access.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - images
               properties:
-                openaiFileIdRefs:
-                  type: array
-                  description: Auto-populated by ChatGPT with uploaded file references including download_link URLs.
-                  items:
-                    type: object
-                    properties:
-                      name:
-                        type: string
-                      id:
-                        type: string
-                      mime_type:
-                        type: string
-                      download_link:
-                        type: string
-                        format: uri
                 images:
                   type: array
-                  description: Base64-encoded images. Use this as fallback when openaiFileIdRefs is empty. Read uploaded files with Code Interpreter, base64-encode them, and pass here.
+                  description: Base64-encoded images from Code Interpreter. Send ONE image per call.
                   items:
                     type: object
                     required:
@@ -84,17 +70,11 @@ paths:
                     properties:
                       data:
                         type: string
-                        description: Base64-encoded image data (without data URI prefix)
+                        description: Base64-encoded image data (without data URI prefix). ~20KB after compression.
                       mime_type:
                         type: string
-                        description: MIME type (e.g. image/jpeg, image/png)
+                        description: MIME type (e.g. image/jpeg)
                         default: image/jpeg
-                urls:
-                  type: array
-                  description: Plain array of image URLs to download and store (e.g. from listing pages).
-                  items:
-                    type: string
-                    format: uri
       responses:
         '200':
           description: Photos stored
@@ -161,53 +141,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/upload/from-urls:
-    post:
-      operationId: uploadPhotos
-      summary: Upload photos from URLs to get stable photo links
-      description: Downloads photos from ephemeral URLs (e.g. openaiFileIdRefs download_links) and stores them. Returns stable /photo/{id} URLs (30-min TTL) for use in generatePost.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - urls
-              properties:
-                urls:
-                  type: array
-                  items:
-                    type: string
-                    format: uri
-                  description: Array of photo download URLs to store
-      responses:
-        '200':
-          description: Photos stored successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  photos:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                        url:
-                          type: string
-                          format: uri
-                          description: Stable photo URL to use in property.photos
-
   /image/{filename}:
     get:
       operationId: getImage
       summary: Serve a generated image file
-      description: Returns a generated PNG image file. Prefer using base64 from /generate.
+      description: Returns a generated PNG image file.
       parameters:
         - name: filename
           in: path
@@ -365,59 +303,34 @@ components:
           properties:
             newListing:
               type: string
-              description: Badge text for new listing posts
               example: "NUEVA PROPIEDAD"
             openHouse:
               type: string
-              description: Badge text for open house posts
               example: "CASA ABIERTA"
             justSold:
               type: string
-              description: Badge text for just sold posts
               example: "VENDIDA"
             priceReduced:
               type: string
-              description: Badge text for price drop posts
               example: "PRECIO REDUCIDO"
             comingSoon:
               type: string
-              description: Badge text for coming soon posts
               example: "PRÓXIMAMENTE"
             features:
               type: string
-              description: Section header for features list
               example: "CARACTERÍSTICAS"
             contact:
               type: string
-              description: Call-to-action text for contact section
               example: "¡CONTÁCTANOS PARA MÁS!"
             bedrooms:
               type: string
-              description: Label for bedrooms stat
               example: "HAB"
             bathrooms:
               type: string
-              description: Label for bathrooms stat
               example: "BAÑOS"
             swipeForMore:
               type: string
-              description: Carousel swipe indicator text
               example: "DESLIZA PARA VER MÁS"
-        openaiFileIdRefs:
-          type: array
-          description: Photos uploaded by user in ChatGPT. Auto-populated with file reference objects including download_link.
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-              id:
-                type: string
-              mime_type:
-                type: string
-              download_link:
-                type: string
-                format: uri
 
     SingleImageResponse:
       type: object
@@ -438,10 +351,9 @@ components:
           items:
             type: string
             format: uri
-          description: Stable photo URLs (30-min TTL). SAVE these and re-use in property.photos for follow-up calls (Story, different theme, etc).
+          description: Stable photo URLs. SAVE and re-use in property.photos for follow-up calls.
         warning:
           type: string
-          description: If present, photos failed to load. Tell user to re-upload photos in chat.
 
     CarouselImageResponse:
       type: object
@@ -467,10 +379,9 @@ components:
           items:
             type: string
             format: uri
-          description: Stable photo URLs (30-min TTL). SAVE these and re-use in property.photos for follow-up calls (Story, different theme, etc).
+          description: Stable photo URLs. SAVE and re-use in property.photos for follow-up calls.
         warning:
           type: string
-          description: If present, photos failed to load. Tell user to re-upload photos in chat.
 
     SingleImageResult:
       type: object
