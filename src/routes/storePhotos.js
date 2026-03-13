@@ -139,6 +139,17 @@ router.post('/', async (req, res) => {
     if (urls && Array.isArray(urls) && urls.length > 0) {
       console.log(`[StorePhotos] Method: plain URLs (${urls.length} URL(s))`);
 
+      // Detect /mnt/data/ sandbox paths and reject immediately with clear instructions
+      const sandboxPaths = urls.filter(u => u && (u.startsWith('/mnt/') || u.startsWith('/tmp/') || u.startsWith('/var/')));
+      if (sandboxPaths.length > 0 && sandboxPaths.length === urls.length) {
+        console.warn(`[StorePhotos] ALL ${urls.length} URLs are sandbox paths — rejecting`);
+        return res.json({
+          success: false,
+          photoUrls: [],
+          message: `All ${urls.length} URLs are /mnt/data/ sandbox paths that the server cannot access. You MUST use Code Interpreter to read these files and base64-encode them. Run this Python code:\n\nimport base64, json, urllib.request\nphoto_urls = []\nfor filepath in ${JSON.stringify(sandboxPaths)}:\n    with open(filepath, "rb") as f:\n        b64 = base64.b64encode(f.read()).decode()\n    photo_urls.append({"data": b64, "mime_type": "image/jpeg"})\ndata = json.dumps({"images": photo_urls}).encode()\nreq = urllib.request.Request("${baseUrl}/api/store-photos", data=data, headers={"Content-Type": "application/json"})\nresult = json.loads(urllib.request.urlopen(req, timeout=60).read())\nprint(result)`
+        });
+      }
+
       const results = await Promise.all(
         urls.map(async (url) => {
           if (!url || typeof url !== 'string' || !url.startsWith('http')) return null;
@@ -176,7 +187,7 @@ router.post('/', async (req, res) => {
     return res.json({
       success: false,
       photoUrls: [],
-      message: 'No photos received. openaiFileIdRefs was empty or missing. FALLBACK: Use Code Interpreter to read the uploaded images with Python, base64-encode them, and call storePhotos again with the "images" array. Example: images: [{"data": "<base64>", "mime_type": "image/jpeg"}]'
+      message: 'PHOTO UPLOAD FAILED. You MUST use Code Interpreter now. Run this Python code to read the uploaded files, base64-encode them, and send them to storePhotos:\n\nimport base64, json, urllib.request, glob\nfiles = glob.glob("/mnt/data/*")\nphoto_urls = []\nfor fp in files:\n    if fp.lower().endswith((".jpg",".jpeg",".png",".webp")):\n        with open(fp, "rb") as f:\n            b64 = base64.b64encode(f.read()).decode()\n        photo_urls.append({"data": b64, "mime_type": "image/jpeg"})\nif photo_urls:\n    data = json.dumps({"images": photo_urls}).encode()\n    req = urllib.request.Request("' + baseUrl + '/api/store-photos", data=data, headers={"Content-Type": "application/json"})\n    result = json.loads(urllib.request.urlopen(req, timeout=60).read())\n    print(result)\nelse:\n    print("No image files found in /mnt/data/")\n\nDo NOT call generatePost until you have valid photoUrls from storePhotos.'
     });
   } catch (err) {
     console.error('[StorePhotos] Error:', err);
