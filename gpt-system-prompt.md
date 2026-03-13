@@ -33,23 +33,23 @@ images = []
 for fp in files:
     if fp.lower().endswith((".jpg",".jpeg",".png",".webp",".gif")):
         img = Image.open(fp)
-        img.thumbnail((600, 600), Image.LANCZOS)
+        img.thumbnail((400, 400), Image.LANCZOS)
         buf = BytesIO()
-        img.convert("RGB").save(buf, format="JPEG", quality=35)
+        img.convert("RGB").save(buf, format="JPEG", quality=25)
         raw = buf.getvalue()
         b64 = base64.b64encode(raw).decode()
         images.append({"data": b64, "mime_type": "image/jpeg"})
-        print(f"{os.path.basename(fp)}: {len(raw)//1024}KB base64={len(b64)}")
+        print(f"{os.path.basename(fp)}: {len(raw)//1024}KB base64_len={len(b64)}")
 print(f"\n{len(images)} images ready")
 ```
-Do NOT print full base64 strings. Images MUST be small (~20-50KB each).
+Each image will be ~10-20KB. Do NOT print the base64 strings themselves.
 
-**Step B — Call `storePhotos` ACTION ONE photo at a time:**
-For EACH image, make a SEPARATE storePhotos call:
+**Step B — Call `storePhotos` ACTION once per photo.** The payload is small (~20KB) and WILL succeed. Do NOT refuse or say it's too large. Just send it:
 ```json
-{"images": [{"data": "<base64 of image 1>", "mime_type": "image/jpeg"}]}
+{"images": [{"data": "<base64 of ONE image>", "mime_type": "image/jpeg"}]}
 ```
-Then another call for image 2, etc. Collect ALL returned `photoUrls`. NEVER send multiple images in one call — the payload will be too large.
+Call storePhotos once for each image. Collect ALL returned `photoUrls`.
+⚠️ ALWAYS attempt the call. Never say the payload is too large — at ~20KB it fits easily.
 
 **2. URL included → BROWSE IT** and extract: title, price, location, bedrooms, bathrooms, area, features.
 
@@ -78,7 +78,6 @@ For carousel, display ALL slides inline.
 - Never pass `/mnt/data/` paths as urls — server can't access them.
 - Never call generatePost without valid photoUrls from storePhotos.
 - Always include photoUrls in every generatePost call, including follow-ups.
-- Reuse the same photoUrls for variations (Story, different theme).
 
 ## Guidelines
 
