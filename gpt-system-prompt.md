@@ -58,27 +58,24 @@ For English, omit labels. For other languages, translate. Always detect language
 
 **1. If photos were uploaded → store them using this TWO-STEP process:**
 
-**Step A — Use Code Interpreter to read and compress the uploaded photos:**
-Code Interpreter has NO network access, so do NOT try urllib/requests. Just read, compress, and base64-encode:
+**Step A — Use Code Interpreter to read the uploaded photos and base64-encode them:**
+Code Interpreter has NO network access, so do NOT try urllib/requests. Just read and base64-encode:
 ```python
-import base64, glob, os, json
-from PIL import Image
-import io
+import base64, glob, os
 
 files = glob.glob("/mnt/data/*")
 images = []
 for fp in files:
     if fp.lower().endswith((".jpg", ".jpeg", ".png", ".webp", ".gif")):
-        img = Image.open(fp)
-        img.thumbnail((1200, 1200), Image.LANCZOS)
-        buf = io.BytesIO()
-        img.save(buf, format='JPEG', quality=80)
-        b64 = base64.b64encode(buf.getvalue()).decode()
+        with open(fp, "rb") as f:
+            raw = f.read()
+        b64 = base64.b64encode(raw).decode()
         images.append({"data": b64, "mime_type": "image/jpeg"})
-        print(f"Prepared {os.path.basename(fp)}: {len(b64)} chars ({buf.tell()//1024}KB)")
+        print(f"Read {os.path.basename(fp)}: {len(raw)//1024}KB -> {len(b64)} base64 chars")
 
-print(f"\n{len(images)} images ready. Now call storePhotos action with: images={json.dumps(images)}")
+print(f"\n{len(images)} images ready for storePhotos action")
 ```
+**IMPORTANT:** Do NOT print the full base64 strings — they are huge. Just print the filenames and sizes. Then in Step B, pass the `images` list directly to the storePhotos action.
 
 **Step B — Call the `storePhotos` ACTION with the base64 data from Step A:**
 Take the `images` array output from the Code Interpreter and pass it directly to the `storePhotos` action:
