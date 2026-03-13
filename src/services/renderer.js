@@ -162,26 +162,34 @@ async function downloadWithRetry(url, retries = 1) {
 }
 
 /**
- * Pre-download all photos and replace URLs with base64 data URIs.
- * Recognizes our own /photo/:id URLs and resolves them from in-memory store.
- * If download fails, keep the original URL so Puppeteer can try loading it.
+ * Pre-process all photos for Puppeteer rendering.
+ *
+ * For our own /photo/:id URLs: convert to http://localhost URLs so Puppeteer
+ * loads them via HTTP from the same Express server. This is much more reliable
+ * than embedding multi-MB base64 data URIs in HTML (which caused black photos
+ * because Puppeteer didn't wait long enough to decode them).
+ *
+ * For external URLs: download and convert to base64 data URIs (or keep original).
  */
 async function preDownloadPhotos(property) {
   if (!property.photos || property.photos.length === 0) return property;
 
-  const { getPhotoAsDataUri } = require('./photoStore');
+  const { getPhoto } = require('./photoStore');
+  const localPort = process.env.PORT || 3000;
 
-  // Download all photos in parallel for speed
+  // Process all photos in parallel for speed
   const downloadPromises = property.photos.map(async (photoUrl) => {
     if (!photoUrl) return null;
 
-    // Check if this is our own /photo/:id URL — resolve from in-memory store
+    // Check if this is our own /photo/:id URL — use localhost HTTP URL
+    // so Puppeteer loads via HTTP (triggers networkidle0 = proper image loading)
     const photoIdMatch = photoUrl.match(/\/photo\/([0-9a-f-]{36})$/i);
     if (photoIdMatch) {
-      const dataUri = getPhotoAsDataUri(photoIdMatch[1]);
-      if (dataUri) {
-        console.log(`[Download] Resolved from store: ${photoIdMatch[1]} (${Math.round(dataUri.length / 1024)}KB)`);
-        return dataUri;
+      const photo = getPhoto(photoIdMatch[1]);
+      if (photo) {
+        const localUrl = `http://localhost:${localPort}/photo/${photoIdMatch[1]}`;
+        console.log(`[Download] Photo ${photoIdMatch[1]} found in store (${Math.round(photo.buffer.length / 1024)}KB) → localhost URL`);
+        return localUrl;
       } else {
         console.error(`[Download] Photo ${photoIdMatch[1]} not found in store (expired?)`);
         return null;
@@ -241,15 +249,25 @@ async function renderHtmlToImage(html, width, height) {
     await page.setViewport({ width, height, deviceScaleFactor: 1 });
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    const hasExternalImages = html.includes('src="http://') || html.includes('src="https://');
+    const hasHttpImages = html.includes('src="http://') || html.includes('src="https://');
+    const hasDataUriImages = html.includes('src="data:image/');
 
-    // Use networkidle0 only if external images exist (rare — we pre-download as base64)
-    // Otherwise domcontentloaded is much faster
-    const waitStrategy = hasExternalImages ? 'networkidle0' : 'domcontentloaded';
+    // Use networkidle0 when images are loaded via HTTP (including localhost /photo/ URLs).
+    // This ensures Puppeteer waits for all images to fully load before taking the screenshot.
+    // For data URIs, use networkidle0 as well but with shorter extra wait.
+    const needsImageWait = hasHttpImages || hasDataUriImages;
+    const waitStrategy = needsImageWait ? 'networkidle0' : 'domcontentloaded';
+
+    console.log(`[Render] Strategy: ${waitStrategy} (httpImages=${hasHttpImages}, dataUriImages=${hasDataUriImages})`);
     await page.setContent(html, { waitUntil: waitStrategy, timeout: 30000 });
 
     await page.evaluate(() => document.fonts.ready);
-    await new Promise(r => setTimeout(r, hasExternalImages ? 1000 : 300));
+    // Wait for images to fully render:
+    // - HTTP images (including localhost): 500ms (localhost is fast)
+    // - Data URI images: 1000ms (large base64 needs decode time)
+    // - No images: 200ms (just fonts/layout)
+    const extraWait = hasHttpImages ? 500 : hasDataUriImages ? 1000 : 200;
+    await new Promise(r => setTimeout(r, extraWait));
 
     const imageBuffer = await page.screenshot({
       type: 'png',
@@ -274,8 +292,17 @@ async function generateImage(templateConfig, property, openHouse, labels) {
     throw new Error(`Unknown size: ${size}`);
   }
 
-  // Pre-download all photos as base64
+  // Pre-process photos: convert /photo/{id} URLs to localhost HTTP URLs
+  console.log(`[GenerateImage] Input photos: ${(property.photos || []).length}`);
+  (property.photos || []).forEach((u, i) => console.log(`[GenerateImage]   photo[${i}] input: ${u ? u.substring(0, 120) : 'null'}`));
+
   const processedProperty = await preDownloadPhotos(property);
+
+  console.log(`[GenerateImage] Processed photos: ${(processedProperty.photos || []).length}`);
+  (processedProperty.photos || []).forEach((u, i) => {
+    const preview = u ? (u.length > 120 ? u.substring(0, 80) + '...[' + Math.round(u.length/1024) + 'KB]' : u) : 'null';
+    console.log(`[GenerateImage]   photo[${i}] output: ${preview}`);
+  });
 
   const htmlResult = generateTemplate(templateConfig, processedProperty, openHouse, labels);
 
