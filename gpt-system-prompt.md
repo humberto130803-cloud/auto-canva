@@ -33,23 +33,23 @@ images = []
 for fp in files:
     if fp.lower().endswith((".jpg",".jpeg",".png",".webp",".gif")):
         img = Image.open(fp)
-        if max(img.size) > 1200:
-            img.thumbnail((1200, 1200), Image.LANCZOS)
+        img.thumbnail((600, 600), Image.LANCZOS)
         buf = BytesIO()
-        img.convert("RGB").save(buf, format="JPEG", quality=80)
+        img.convert("RGB").save(buf, format="JPEG", quality=35)
         raw = buf.getvalue()
         b64 = base64.b64encode(raw).decode()
         images.append({"data": b64, "mime_type": "image/jpeg"})
-        print(f"{os.path.basename(fp)}: {len(raw)//1024}KB")
+        print(f"{os.path.basename(fp)}: {len(raw)//1024}KB base64={len(b64)}")
 print(f"\n{len(images)} images ready")
 ```
-Do NOT print full base64 strings.
+Do NOT print full base64 strings. Images MUST be small (~20-50KB each).
 
-**Step B — Call `storePhotos` ACTION** with the images array from Step A:
+**Step B — Call `storePhotos` ACTION ONE photo at a time:**
+For EACH image, make a SEPARATE storePhotos call:
 ```json
-{"images": [{"data": "<base64>", "mime_type": "image/jpeg"}]}
+{"images": [{"data": "<base64 of image 1>", "mime_type": "image/jpeg"}]}
 ```
-Send max 3 images per call. For 4+ photos, call storePhotos multiple times. Save ALL returned `photoUrls`.
+Then another call for image 2, etc. Collect ALL returned `photoUrls`. NEVER send multiple images in one call — the payload will be too large.
 
 **2. URL included → BROWSE IT** and extract: title, price, location, bedrooms, bathrooms, area, features.
 
