@@ -146,7 +146,7 @@ router.post('/', async (req, res) => {
         return res.json({
           success: false,
           photoUrls: [],
-          message: `All ${urls.length} URLs are /mnt/data/ sandbox paths that the server cannot access. You MUST use Code Interpreter to read these files and base64-encode them. Run this Python code:\n\nimport base64, json, urllib.request\nphoto_urls = []\nfor filepath in ${JSON.stringify(sandboxPaths)}:\n    with open(filepath, "rb") as f:\n        b64 = base64.b64encode(f.read()).decode()\n    photo_urls.append({"data": b64, "mime_type": "image/jpeg"})\ndata = json.dumps({"images": photo_urls}).encode()\nreq = urllib.request.Request("${baseUrl}/api/store-photos", data=data, headers={"Content-Type": "application/json"})\nresult = json.loads(urllib.request.urlopen(req, timeout=60).read())\nprint(result)`
+          message: `FAILED: All ${urls.length} URLs are /mnt/data/ sandbox paths the server cannot access. FIX: Step A) Use Code Interpreter to read these files and base64-encode them (do NOT use urllib - Code Interpreter has no network). Use PIL to compress to JPEG. Step B) Call the storePhotos ACTION with {"images": [{"data":"<base64>","mime_type":"image/jpeg"}]}. The ACTION has network access, Code Interpreter does not.`
         });
       }
 
@@ -187,7 +187,7 @@ router.post('/', async (req, res) => {
     return res.json({
       success: false,
       photoUrls: [],
-      message: 'PHOTO UPLOAD FAILED. You MUST use Code Interpreter now. Run this Python code to read the uploaded files, base64-encode them, and send them to storePhotos:\n\nimport base64, json, urllib.request, glob\nfiles = glob.glob("/mnt/data/*")\nphoto_urls = []\nfor fp in files:\n    if fp.lower().endswith((".jpg",".jpeg",".png",".webp")):\n        with open(fp, "rb") as f:\n            b64 = base64.b64encode(f.read()).decode()\n        photo_urls.append({"data": b64, "mime_type": "image/jpeg"})\nif photo_urls:\n    data = json.dumps({"images": photo_urls}).encode()\n    req = urllib.request.Request("' + baseUrl + '/api/store-photos", data=data, headers={"Content-Type": "application/json"})\n    result = json.loads(urllib.request.urlopen(req, timeout=60).read())\n    print(result)\nelse:\n    print("No image files found in /mnt/data/")\n\nDo NOT call generatePost until you have valid photoUrls from storePhotos.'
+      message: 'PHOTO UPLOAD FAILED. FIX with two steps: Step A) Use Code Interpreter to read /mnt/data/ files and base64-encode them using PIL (compress to JPEG, max 1200px). Do NOT use urllib/requests — Code Interpreter has NO network access. Step B) Call the storePhotos ACTION (not from Code Interpreter) with {"images": [{"data":"<base64>","mime_type":"image/jpeg"},...]}. The action has network access. Do NOT call generatePost until storePhotos returns valid photoUrls starting with https://.'
     });
   } catch (err) {
     console.error('[StorePhotos] Error:', err);
