@@ -58,27 +58,36 @@ For English, omit labels. For other languages, translate. Always detect language
 
 **1. If photos were uploaded → store them using this TWO-STEP process:**
 
-**Step A — Use Code Interpreter to read the uploaded photos and base64-encode them:**
-Code Interpreter has NO network access, so do NOT try urllib/requests. Just read and base64-encode:
+**Step A — Use Code Interpreter to read the uploaded photos, compress them, and base64-encode:**
+Code Interpreter has NO network access, so do NOT try urllib/requests. Read, compress, and encode:
 ```python
 import base64, glob, os
+from PIL import Image
+from io import BytesIO
 
 files = glob.glob("/mnt/data/*")
 images = []
 for fp in files:
     if fp.lower().endswith((".jpg", ".jpeg", ".png", ".webp", ".gif")):
-        with open(fp, "rb") as f:
-            raw = f.read()
+        img = Image.open(fp)
+        # Resize if too large (max 1200px on longest side) to keep payload small
+        max_dim = 1200
+        if max(img.size) > max_dim:
+            img.thumbnail((max_dim, max_dim), Image.LANCZOS)
+        buf = BytesIO()
+        img.convert("RGB").save(buf, format="JPEG", quality=80)
+        raw = buf.getvalue()
         b64 = base64.b64encode(raw).decode()
         images.append({"data": b64, "mime_type": "image/jpeg"})
-        print(f"Read {os.path.basename(fp)}: {len(raw)//1024}KB -> {len(b64)} base64 chars")
+        print(f"Read {os.path.basename(fp)}: {img.size} -> {len(raw)//1024}KB JPEG -> {len(b64)} base64 chars")
 
 print(f"\n{len(images)} images ready for storePhotos action")
 ```
 **IMPORTANT:** Do NOT print the full base64 strings — they are huge. Just print the filenames and sizes. Then in Step B, pass the `images` list directly to the storePhotos action.
 
 **Step B — Call the `storePhotos` ACTION with the base64 data from Step A:**
-Take the `images` array output from the Code Interpreter and pass it directly to the `storePhotos` action:
+Take the `images` array output from the Code Interpreter and pass it directly to the `storePhotos` action.
+- If you have **3 or fewer photos**, send them ALL in one call:
 ```json
 {
   "images": [
@@ -87,7 +96,9 @@ Take the `images` array output from the Code Interpreter and pass it directly to
   ]
 }
 ```
-The server will return `photoUrls` — save them for step 3.
+- If you have **4 or more photos**, send them in batches of 2-3 per call to avoid payload limits. Call storePhotos multiple times and collect all photoUrls.
+
+The server will return `photoUrls` — save ALL of them for step 3.
 
 **⚠️ CRITICAL RULES FOR PHOTOS:**
 - Code Interpreter has NO outbound network. NEVER use urllib/requests in Code Interpreter.

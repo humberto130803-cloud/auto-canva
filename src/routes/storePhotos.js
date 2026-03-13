@@ -146,7 +146,7 @@ router.post('/', async (req, res) => {
         return res.json({
           success: false,
           photoUrls: [],
-          message: `FAILED: All ${urls.length} URLs are /mnt/data/ sandbox paths the server cannot access. FIX: Step A) Use Code Interpreter to read these files and base64-encode them (do NOT use urllib - Code Interpreter has no network). Use PIL to compress to JPEG. Step B) Call the storePhotos ACTION with {"images": [{"data":"<base64>","mime_type":"image/jpeg"}]}. The ACTION has network access, Code Interpreter does not.`
+          message: `FAILED: All ${urls.length} URLs are /mnt/data/ sandbox paths the server cannot access. FIX: Step A) Use Code Interpreter to read these files, compress with PIL (JPEG, max 1200px, quality=80), then base64-encode. Do NOT use urllib — Code Interpreter has no network. Step B) Call the storePhotos ACTION with {"images": [{"data":"<base64>","mime_type":"image/jpeg"}]}. Send max 3 images per call. The ACTION has network access, Code Interpreter does not.`
         });
       }
 
@@ -187,7 +187,7 @@ router.post('/', async (req, res) => {
     return res.json({
       success: false,
       photoUrls: [],
-      message: 'PHOTO UPLOAD FAILED. FIX with two steps: Step A) Use Code Interpreter to read /mnt/data/ files and base64-encode them using PIL (compress to JPEG, max 1200px). Do NOT use urllib/requests — Code Interpreter has NO network access. Step B) Call the storePhotos ACTION (not from Code Interpreter) with {"images": [{"data":"<base64>","mime_type":"image/jpeg"},...]}. The action has network access. Do NOT call generatePost until storePhotos returns valid photoUrls starting with https://.'
+      message: 'PHOTO UPLOAD FAILED. FIX with two steps: Step A) Use Code Interpreter to read /mnt/data/ files, compress them with PIL (JPEG, max 1200px, quality=80), then base64-encode. Do NOT use urllib/requests — Code Interpreter has NO network access. Step B) Call the storePhotos ACTION (not from Code Interpreter) with {"images": [{"data":"<base64>","mime_type":"image/jpeg"},...]}. Send max 3 images per call — if more, call storePhotos multiple times. Do NOT call generatePost until storePhotos returns valid photoUrls starting with https://.'
     });
   } catch (err) {
     console.error('[StorePhotos] Error:', err);
