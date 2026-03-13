@@ -45,7 +45,13 @@ paths:
     post:
       operationId: storePhotos
       summary: Store uploaded photos and get stable URLs
-      description: Call this IMMEDIATELY when user uploads photos. Stores them and returns stable URLs for use in generatePost.
+      description: |
+        Call this IMMEDIATELY when user uploads photos. Accepts three input methods:
+        1. openaiFileIdRefs — auto-injected by ChatGPT (preferred when it works)
+        2. images — base64-encoded image data (reliable fallback via Code Interpreter)
+        3. urls — plain URL array (for photos from listing pages)
+        Returns stable /photo/{id} URLs (30-min TTL) for use in generatePost.
+        If openaiFileIdRefs returns empty, use Code Interpreter to base64-encode the uploaded images and retry with the "images" field.
       requestBody:
         required: true
         content:
@@ -55,9 +61,40 @@ paths:
               properties:
                 openaiFileIdRefs:
                   type: array
-                  description: Photos uploaded by user in ChatGPT.
+                  description: Auto-populated by ChatGPT with uploaded file references including download_link URLs.
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      id:
+                        type: string
+                      mime_type:
+                        type: string
+                      download_link:
+                        type: string
+                        format: uri
+                images:
+                  type: array
+                  description: Base64-encoded images. Use this as fallback when openaiFileIdRefs is empty. Read uploaded files with Code Interpreter, base64-encode them, and pass here.
+                  items:
+                    type: object
+                    required:
+                      - data
+                    properties:
+                      data:
+                        type: string
+                        description: Base64-encoded image data (without data URI prefix)
+                      mime_type:
+                        type: string
+                        description: MIME type (e.g. image/jpeg, image/png)
+                        default: image/jpeg
+                urls:
+                  type: array
+                  description: Plain array of image URLs to download and store (e.g. from listing pages).
                   items:
                     type: string
+                    format: uri
       responses:
         '200':
           description: Photos stored
@@ -368,9 +405,19 @@ components:
               example: "DESLIZA PARA VER MÁS"
         openaiFileIdRefs:
           type: array
-          description: Photos uploaded by user in ChatGPT. Include all uploaded image files.
+          description: Photos uploaded by user in ChatGPT. Auto-populated with file reference objects including download_link.
           items:
-            type: string
+            type: object
+            properties:
+              name:
+                type: string
+              id:
+                type: string
+              mime_type:
+                type: string
+              download_link:
+                type: string
+                format: uri
 
     SingleImageResponse:
       type: object

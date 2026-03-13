@@ -6,92 +6,177 @@ const { storePhoto, setLastBatch } = require('../services/photoStore');
 /**
  * POST /api/store-photos
  *
- * Called IMMEDIATELY after user uploads photos in ChatGPT.
- * Receives photos via openaiFileIdRefs, downloads them from
- * the signed download_link URLs, and stores them in memory.
- * Returns stable /photo/{id} URLs that last 30 minutes.
+ * Accepts photos via THREE methods (in priority order):
  *
- * This must be called BEFORE generatePost so photos are stored
- * while the download_links are still valid (~5 min).
+ * 1. `images` — array of { data: "base64...", mime_type: "image/jpeg" }
+ *    Used by Code Interpreter when openaiFileIdRefs fails.
+ *    Most reliable method.
+ *
+ * 2. `openaiFileIdRefs` — auto-injected by ChatGPT with download_link URLs.
+ *    Works when ChatGPT properly populates file references.
+ *
+ * 3. `urls` — plain array of image URL strings.
+ *    Used when GPT extracts photo URLs from a listing page.
+ *
+ * Returns stable /photo/{id} URLs that last 30 minutes.
  */
 router.post('/', async (req, res) => {
   try {
-    const refs = req.body.openaiFileIdRefs;
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
     console.log(`[StorePhotos] Request body keys: ${Object.keys(req.body).join(', ')}`);
+    console.log(`[StorePhotos] Body size: ~${Math.round(JSON.stringify(req.body).length / 1024)}KB`);
 
-    if (!refs || !Array.isArray(refs) || refs.length === 0) {
-      console.warn('[StorePhotos] No openaiFileIdRefs in request');
-      return res.json({
-        success: false,
-        photoUrls: [],
-        message: 'No photos received. The user should re-upload photos directly in their next message and you should call storePhotos again immediately.'
-      });
-    }
+    // === METHOD 1: Base64 images (from Code Interpreter) ===
+    const images = req.body.images;
+    if (images && Array.isArray(images) && images.length > 0) {
+      console.log(`[StorePhotos] Method: base64 images (${images.length} image(s))`);
 
-    console.log(`[StorePhotos] Received ${refs.length} file ref(s)`);
-    console.log(`[StorePhotos] Raw:`, JSON.stringify(refs).substring(0, 500));
-
-    // Extract download URLs from refs
-    const downloads = [];
-    for (const ref of refs) {
-      if (typeof ref === 'string') {
-        if (ref.startsWith('http')) {
-          downloads.push({ url: ref, name: 'photo' });
-        }
-        continue;
-      }
-      const url = ref.download_link || ref.download_url || ref.url;
-      if (url) {
-        downloads.push({ url, name: ref.name || 'photo' });
-        console.log(`[StorePhotos] File: ${ref.name || 'unnamed'} (${ref.mime_type || '?'}) — ${url.substring(0, 100)}...`);
-      }
-    }
-
-    if (downloads.length === 0) {
-      return res.json({
-        success: false,
-        photoUrls: [],
-        message: 'File refs received but no download URLs found.'
-      });
-    }
-
-    // Download all photos in parallel and store them
-    const results = await Promise.all(
-      downloads.map(async ({ url, name }) => {
+      const photoUrls = [];
+      for (const img of images) {
         try {
-          const dataUri = await downloadImageAsBase64(url);
-          const match = dataUri.match(/^data:([^;]+);base64,(.+)$/s);
-          if (match) {
-            const buffer = Buffer.from(match[2], 'base64');
-            const id = storePhoto(buffer, match[1]);
-            const stableUrl = `${baseUrl}/photo/${id}`;
-            console.log(`[StorePhotos] Stored ${name} → /photo/${id} (${Math.round(buffer.length / 1024)}KB)`);
-            return stableUrl;
+          let base64Data = img.data || img.base64 || '';
+          const mime = img.mime_type || img.mimeType || 'image/jpeg';
+
+          // Strip data URI prefix if present
+          if (base64Data.startsWith('data:')) {
+            const match = base64Data.match(/^data:[^;]+;base64,(.+)$/s);
+            if (match) base64Data = match[1];
           }
-          return null;
+
+          if (!base64Data) {
+            console.warn(`[StorePhotos] Empty base64 data, skipping`);
+            continue;
+          }
+
+          const buffer = Buffer.from(base64Data, 'base64');
+          if (buffer.length < 500) {
+            console.warn(`[StorePhotos] Image too small (${buffer.length} bytes), skipping`);
+            continue;
+          }
+
+          const id = storePhoto(buffer, mime);
+          const stableUrl = `${baseUrl}/photo/${id}`;
+          console.log(`[StorePhotos] Stored base64 image → /photo/${id} (${Math.round(buffer.length / 1024)}KB, ${mime})`);
+          photoUrls.push(stableUrl);
         } catch (err) {
-          console.error(`[StorePhotos] Failed to download ${name}: ${err.message}`);
-          return null;
+          console.error(`[StorePhotos] Failed to process base64 image: ${err.message}`);
         }
-      })
-    );
+      }
 
-    const photoUrls = results.filter(Boolean);
-    console.log(`[StorePhotos] Stored ${photoUrls.length}/${downloads.length} photos`);
-
-    // Save as "last batch" so generatePost can use them even if GPT forgets to pass them
-    if (photoUrls.length > 0) {
-      setLastBatch(photoUrls);
+      if (photoUrls.length > 0) {
+        setLastBatch(photoUrls);
+        return res.json({
+          success: true,
+          photoUrls,
+          message: `${photoUrls.length} photo(s) stored successfully. Use these URLs in property.photos for generatePost.`
+        });
+      }
     }
 
+    // === METHOD 2: openaiFileIdRefs (auto-injected by ChatGPT) ===
+    const refs = req.body.openaiFileIdRefs;
+    if (refs && Array.isArray(refs) && refs.length > 0) {
+      console.log(`[StorePhotos] Method: openaiFileIdRefs (${refs.length} ref(s))`);
+      console.log(`[StorePhotos] Raw:`, JSON.stringify(refs).substring(0, 500));
+
+      const downloads = [];
+      for (const ref of refs) {
+        if (typeof ref === 'string') {
+          if (ref.startsWith('http')) {
+            downloads.push({ url: ref, name: 'photo' });
+          } else {
+            console.log(`[StorePhotos] Skipping non-URL string ref: ${ref.substring(0, 80)}`);
+          }
+          continue;
+        }
+        const url = ref.download_link || ref.download_url || ref.url;
+        if (url) {
+          downloads.push({ url, name: ref.name || 'photo' });
+          console.log(`[StorePhotos] File: ${ref.name || 'unnamed'} (${ref.mime_type || '?'}) — ${url.substring(0, 100)}...`);
+        } else {
+          console.log(`[StorePhotos] Ref has no download link. Keys: ${Object.keys(ref).join(', ')}. Full: ${JSON.stringify(ref).substring(0, 300)}`);
+        }
+      }
+
+      if (downloads.length > 0) {
+        const results = await Promise.all(
+          downloads.map(async ({ url, name }) => {
+            try {
+              const dataUri = await downloadImageAsBase64(url);
+              const match = dataUri.match(/^data:([^;]+);base64,(.+)$/s);
+              if (match) {
+                const buffer = Buffer.from(match[2], 'base64');
+                const id = storePhoto(buffer, match[1]);
+                const stableUrl = `${baseUrl}/photo/${id}`;
+                console.log(`[StorePhotos] Stored ${name} → /photo/${id} (${Math.round(buffer.length / 1024)}KB)`);
+                return stableUrl;
+              }
+              return null;
+            } catch (err) {
+              console.error(`[StorePhotos] Failed to download ${name}: ${err.message}`);
+              return null;
+            }
+          })
+        );
+
+        const photoUrls = results.filter(Boolean);
+        console.log(`[StorePhotos] Stored ${photoUrls.length}/${downloads.length} photos via openaiFileIdRefs`);
+
+        if (photoUrls.length > 0) {
+          setLastBatch(photoUrls);
+          return res.json({
+            success: true,
+            photoUrls,
+            message: `${photoUrls.length} photo(s) stored. Use these URLs in property.photos for all generatePost calls.`
+          });
+        }
+      }
+    }
+
+    // === METHOD 3: Plain URL array ===
+    const urls = req.body.urls;
+    if (urls && Array.isArray(urls) && urls.length > 0) {
+      console.log(`[StorePhotos] Method: plain URLs (${urls.length} URL(s))`);
+
+      const results = await Promise.all(
+        urls.map(async (url) => {
+          if (!url || typeof url !== 'string' || !url.startsWith('http')) return null;
+          try {
+            const dataUri = await downloadImageAsBase64(url);
+            const match = dataUri.match(/^data:([^;]+);base64,(.+)$/s);
+            if (match) {
+              const buffer = Buffer.from(match[2], 'base64');
+              const id = storePhoto(buffer, match[1]);
+              const stableUrl = `${baseUrl}/photo/${id}`;
+              console.log(`[StorePhotos] Stored URL → /photo/${id} (${Math.round(buffer.length / 1024)}KB)`);
+              return stableUrl;
+            }
+            return null;
+          } catch (err) {
+            console.error(`[StorePhotos] Failed to download URL: ${err.message}`);
+            return null;
+          }
+        })
+      );
+
+      const photoUrls = results.filter(Boolean);
+      if (photoUrls.length > 0) {
+        setLastBatch(photoUrls);
+        return res.json({
+          success: true,
+          photoUrls,
+          message: `${photoUrls.length} photo(s) stored from URLs. Use these in property.photos for generatePost.`
+        });
+      }
+    }
+
+    // === No photos from any method ===
+    console.warn('[StorePhotos] No photos received from any method');
     return res.json({
-      success: true,
-      photoUrls,
-      message: photoUrls.length > 0
-        ? `${photoUrls.length} photo(s) stored. Use these URLs in property.photos for all generatePost calls.`
-        : 'Photos could not be downloaded. Ask user to re-upload or use the upload page.'
+      success: false,
+      photoUrls: [],
+      message: 'No photos received. openaiFileIdRefs was empty or missing. FALLBACK: Use Code Interpreter to read the uploaded images with Python, base64-encode them, and call storePhotos again with the "images" array. Example: images: [{"data": "<base64>", "mime_type": "image/jpeg"}]'
     });
   } catch (err) {
     console.error('[StorePhotos] Error:', err);
