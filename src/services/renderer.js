@@ -174,22 +174,20 @@ async function downloadWithRetry(url, retries = 1) {
 async function preDownloadPhotos(property) {
   if (!property.photos || property.photos.length === 0) return property;
 
-  const { getPhoto } = require('./photoStore');
-  const localPort = process.env.PORT || 3000;
-
   // Process all photos in parallel for speed
   const downloadPromises = property.photos.map(async (photoUrl) => {
     if (!photoUrl) return null;
 
-    // Check if this is our own /photo/:id URL — use localhost HTTP URL
-    // so Puppeteer loads via HTTP (triggers networkidle0 = proper image loading)
+    // Check if this is our own /photo/:id URL — convert to data URI directly.
+    // Using data URIs avoids localhost networking issues on Render (IPv6/IPv4 mismatch).
+    // Photos are compressed to ~10-20KB so data URIs are small and fast to decode.
     const photoIdMatch = photoUrl.match(/\/photo\/([0-9a-f-]{36})$/i);
     if (photoIdMatch) {
-      const photo = getPhoto(photoIdMatch[1]);
-      if (photo) {
-        const localUrl = `http://localhost:${localPort}/photo/${photoIdMatch[1]}`;
-        console.log(`[Download] Photo ${photoIdMatch[1]} found in store (${Math.round(photo.buffer.length / 1024)}KB) → localhost URL`);
-        return localUrl;
+      const { getPhotoAsDataUri } = require('./photoStore');
+      const dataUri = getPhotoAsDataUri(photoIdMatch[1]);
+      if (dataUri) {
+        console.log(`[Download] Photo ${photoIdMatch[1]} → data URI (${Math.round(dataUri.length / 1024)}KB)`);
+        return dataUri;
       } else {
         console.error(`[Download] Photo ${photoIdMatch[1]} not found in store (expired?)`);
         return null;
