@@ -12,7 +12,7 @@ paths:
     post:
       operationId: generatePost
       summary: Generate a real estate social media post image
-      description: Renders a post image. IMPORTANT - set property.photos to the photoUrls from storePhotos. Returns image URLs.
+      description: Generates a post image. Photos are handled automatically via file references. Just call this action directly after user uploads photos.
       requestBody:
         required: true
         content:
@@ -44,36 +44,30 @@ paths:
   /api/store-photos:
     post:
       operationId: storePhotos
-      summary: Store photos as stable URLs for generatePost
-      description: |
-        Stores base64-encoded photos and returns stable /photo/{id} URLs (30-min TTL).
-        BEFORE calling this, use Code Interpreter to read uploaded photos from /mnt/data/,
-        compress them (thumbnail 400px, JPEG quality 25), and base64-encode them.
-        Send ONE image per call. The payload will be ~20KB which is small and fast.
-        Do NOT use urllib/requests in Code Interpreter — it has no network access.
+      summary: Store user-uploaded photos as stable URLs
+      description: Stores photos and returns stable /photo/{id} URLs (30-min TTL). Photos are received automatically via file references.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - images
               properties:
+                openaiFileIdRefs:
+                  type: array
+                  items:
+                    type: string
+                  description: User-uploaded photos. Auto-populated by ChatGPT runtime.
                 images:
                   type: array
-                  description: Base64-encoded images from Code Interpreter. Send ONE image per call.
+                  description: Alternative — base64-encoded images. Use only if file refs fail.
                   items:
                     type: object
-                    required:
-                      - data
                     properties:
                       data:
                         type: string
-                        description: Base64-encoded image data (without data URI prefix). ~20KB after compression.
                       mime_type:
                         type: string
-                        description: MIME type (e.g. image/jpeg)
                         default: image/jpeg
       responses:
         '200':
@@ -177,6 +171,11 @@ components:
         - template
         - property
       properties:
+        openaiFileIdRefs:
+          type: array
+          items:
+            type: string
+          description: User-uploaded photos. Auto-populated by ChatGPT runtime — do NOT set manually.
         template:
           type: object
           required:
@@ -281,10 +280,9 @@ components:
               items:
                 type: string
                 format: uri
-              description: "REQUIRED: Use the photoUrls from storePhotos response. Always include this."
+              description: "Photo URLs. If user uploaded photos, leave empty — they are sent automatically via openaiFileIdRefs."
               example:
                 - "https://auto-canva.onrender.com/photo/abc-123-def"
-                - "https://auto-canva.onrender.com/photo/ghi-456-jkl"
         openHouse:
           type: object
           description: Open house details (used with open-house post type)
