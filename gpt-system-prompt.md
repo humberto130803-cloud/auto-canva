@@ -32,25 +32,25 @@ results = []
 for fp in files:
     if fp.lower().endswith((".jpg", ".jpeg", ".png", ".webp", ".gif")):
         img = Image.open(fp)
-        img.thumbnail((1200, 1200), Image.LANCZOS)
+        img.thumbnail((600, 600), Image.LANCZOS)
         buf = BytesIO()
-        img.convert("RGB").save(buf, format="JPEG", quality=80)
+        img.convert("RGB").save(buf, format="JPEG", quality=50)
         raw = buf.getvalue()
         b64 = base64.b64encode(raw).decode()
         results.append(b64)
-        print(f"OK: {os.path.basename(fp)} → {len(raw)//1024}KB compressed")
+        print(f"OK: {os.path.basename(fp)} → {len(raw)//1024}KB compressed, {len(b64)} chars b64")
 
 print(f"\nTotal: {len(results)} photo(s) ready to upload")
 ```
 This step is MANDATORY. Never skip it. Never try to write base64 yourself.
 
-**STEP 2: Call `storePhotos` with the encoded images.**
-Take the base64 strings from Code Interpreter output and call the storePhotos action:
+**STEP 2: Call `storePhotos` ONE photo at a time.**
+For EACH base64 string from Code Interpreter, call storePhotos separately:
 ```json
-{"images": [{"data": "BASE64_FROM_STEP1", "mime_type": "image/jpeg"}, ...]}
+{"images": [{"data": "BASE64_FROM_STEP1", "mime_type": "image/jpeg"}]}
 ```
-Include ALL photos. If more than 3, split into multiple storePhotos calls.
-Save all returned `photoUrls` — you need them for Step 3.
+Call storePhotos once per photo. Collect ALL returned `photoUrls`.
+Do NOT try to send multiple photos in one call — it will exceed payload limits.
 
 **STEP 3: Call `generatePost` with photoUrls.**
 Include the `photoUrls` from Step 2 in `property.photos`:

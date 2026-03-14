@@ -101,7 +101,7 @@ function validateImageBuffer(buffer) {
   return { valid: true };
 }
 
-const HALLUCINATION_ERROR = 'HALLUCINATED IMAGE DATA REJECTED. You CANNOT write base64 image data directly — it always produces garbage. You MUST use Code Interpreter (Python) first: run `from PIL import Image; import base64; from io import BytesIO; img = Image.open("/mnt/data/FILENAME"); img.thumbnail((1200,1200)); buf = BytesIO(); img.convert("RGB").save(buf,"JPEG",quality=80); b64=base64.b64encode(buf.getvalue()).decode(); print(len(b64))` — then call the storePhotos ACTION with {"images":[{"data":"THE_BASE64_FROM_PYTHON","mime_type":"image/jpeg"}]}. Process ALL photos the user uploaded.';
+const HALLUCINATION_ERROR = 'HALLUCINATED IMAGE DATA REJECTED. You CANNOT write base64 image data directly — it always produces garbage. You MUST use Code Interpreter (Python) first: run `from PIL import Image; import base64; from io import BytesIO; img = Image.open("/mnt/data/FILENAME"); img.thumbnail((600,600)); buf = BytesIO(); img.convert("RGB").save(buf,"JPEG",quality=50); b64=base64.b64encode(buf.getvalue()).decode(); print(len(b64))` — then call the storePhotos ACTION with {"images":[{"data":"THE_BASE64_FROM_PYTHON","mime_type":"image/jpeg"}]}. Send ONE photo per call. Process ALL photos the user uploaded.';
 
 /**
  * POST /api/store-photos
@@ -295,7 +295,7 @@ router.post('/', async (req, res) => {
     return res.json({
       success: false,
       photoUrls: [],
-      message: 'NO PHOTOS RECEIVED. You MUST use Code Interpreter (Python) FIRST to process photos before calling this action. Step 1: In Code Interpreter run: from PIL import Image; import base64, glob; from io import BytesIO; files = glob.glob("/mnt/data/*"); results = []; for fp in files: if fp.lower().endswith((".jpg",".jpeg",".png",".webp")): img = Image.open(fp); img.thumbnail((1200,1200)); buf = BytesIO(); img.convert("RGB").save(buf,"JPEG",quality=80); b64 = base64.b64encode(buf.getvalue()).decode(); results.append(b64); print(f"{fp}: {len(b64)} chars"). Step 2: Call storePhotos ACTION with {"images":[{"data":"PASTE_EACH_B64_HERE","mime_type":"image/jpeg"}]}. Step 3: Use the returned photoUrls in generatePost. Do NOT skip Code Interpreter — you CANNOT write base64 yourself.'
+      message: 'NO PHOTOS RECEIVED. You MUST use Code Interpreter (Python) FIRST to process photos before calling this action. Step 1: In Code Interpreter run: from PIL import Image; import base64, glob; from io import BytesIO; files = glob.glob("/mnt/data/*"); results = []; for fp in files: if fp.lower().endswith((".jpg",".jpeg",".png",".webp")): img = Image.open(fp); img.thumbnail((600,600)); buf = BytesIO(); img.convert("RGB").save(buf,"JPEG",quality=50); b64 = base64.b64encode(buf.getvalue()).decode(); results.append(b64); print(f"{fp}: {len(b64)} chars"). Step 2: Call storePhotos ACTION ONE photo at a time: {"images":[{"data":"PASTE_B64_HERE","mime_type":"image/jpeg"}]}. Step 3: Use the returned photoUrls in generatePost. Do NOT skip Code Interpreter — you CANNOT write base64 yourself.'
     });
   } catch (err) {
     console.error('[StorePhotos] Error:', err);
