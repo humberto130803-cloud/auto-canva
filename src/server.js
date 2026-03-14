@@ -47,6 +47,28 @@ app.get('/privacy', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'privacy-policy.html'));
 });
 
+// Debug: capture last generatePost request details
+let lastGenerateDebug = null;
+app.use('/generate', (req, res, next) => {
+  if (req.method === 'POST') {
+    const refs = req.body.openaiFileIdRefs;
+    lastGenerateDebug = {
+      timestamp: new Date().toISOString(),
+      bodyKeys: Object.keys(req.body),
+      hasOpenaiFileIdRefs: !!refs,
+      openaiFileIdRefsCount: Array.isArray(refs) ? refs.length : 0,
+      openaiFileIdRefsRaw: refs ? JSON.stringify(refs).substring(0, 2000) : 'not present',
+      photosFromProperty: (req.body.property?.photos || []).map(u => u ? u.substring(0, 150) : 'null'),
+      templateLayout: req.body.template?.layout
+    };
+    console.log('[DEBUG] generatePost request:', JSON.stringify(lastGenerateDebug, null, 2));
+  }
+  next();
+});
+app.get('/debug/last-generate', (req, res) => {
+  res.json(lastGenerateDebug || { message: 'No generatePost requests yet' });
+});
+
 // Health check
 app.get('/', (req, res) => {
   res.json({
