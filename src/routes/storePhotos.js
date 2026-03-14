@@ -55,6 +55,21 @@ router.post('/', async (req, res) => {
             continue;
           }
 
+          // Validate magic bytes — reject hallucinated/fake base64 data
+          const head = buffer.slice(0, 4);
+          const isJPEG = head[0] === 0xFF && head[1] === 0xD8;
+          const isPNG = head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4E && head[3] === 0x47;
+          const isGIF = head[0] === 0x47 && head[1] === 0x49 && head[2] === 0x46;
+          const isWEBP = buffer.length > 12 && buffer.slice(8, 12).toString() === 'WEBP';
+          if (!isJPEG && !isPNG && !isGIF && !isWEBP) {
+            console.warn(`[StorePhotos] INVALID IMAGE: magic bytes [${head[0]?.toString(16)}, ${head[1]?.toString(16)}, ${head[2]?.toString(16)}, ${head[3]?.toString(16)}] — not JPEG/PNG/GIF/WEBP. GPT likely hallucinated the base64.`);
+            return res.json({
+              success: false,
+              photoUrls: [],
+              message: 'INVALID IMAGE DATA — the base64 you sent is NOT a real image. You CANNOT extract image bytes directly. You MUST use Code Interpreter first: run the Python code from your instructions to read files from /mnt/data/, compress with PIL, and base64-encode. Then call storePhotos with that output.'
+            });
+          }
+
           const id = storePhoto(buffer, mime);
           const stableUrl = `${baseUrl}/photo/${id}`;
           console.log(`[StorePhotos] Stored base64 image → /photo/${id} (${Math.round(buffer.length / 1024)}KB, ${mime})`);
